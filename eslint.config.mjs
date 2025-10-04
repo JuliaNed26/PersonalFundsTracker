@@ -4,6 +4,7 @@ import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
 import reactNativePlugin from "eslint-plugin-react-native";
+import prettierPlugin from "eslint-plugin-prettier";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
@@ -21,6 +22,7 @@ export default defineConfig([
       "react-hooks": reactHooksPlugin,
       "react-native": reactNativePlugin,
       "@typescript-eslint": tseslint.plugin,
+      prettier: prettierPlugin
     },
 
     extends: [
@@ -42,6 +44,17 @@ export default defineConfig([
       "react-native/no-single-element-style-arrays": "warn",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
+      "prettier/prettier": [
+        "error",
+        {
+          singleQuote: true,
+          semi: true,
+          trailingComma: "all",
+          printWidth: 100,
+          tabWidth: 2,
+          arrowParens: "always",
+        },
+      ],
     },
 
     settings: { react: { version: "detect" } },
