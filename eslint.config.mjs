@@ -51,8 +51,9 @@ export default defineConfig([
           semi: true,
           trailingComma: "all",
           printWidth: 100,
-          tabWidth: 2,
+          tabWidth: 4,
           arrowParens: "always",
+          endOfLine: "auto"
         },
       ],
     },
