@@ -6,10 +6,10 @@ export default function HomePage() {
   return (
     <View>
       <Text>HomePage</Text>
-      <Link href="/user">
+      <Link href="/profile">
         <Text>Go to user page</Text>
       </Link>
-      <Pressable onPress={() => router.push('/user')}>
+      <Pressable onPress={() => router.push('/profile')}>
         <Text>Go to user page 2</Text>
       </Pressable>
     </View>
