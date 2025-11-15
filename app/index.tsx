@@ -1,17 +1,5 @@
-import { View, Text, Pressable } from 'react-native';
-import React from 'react';
-import { Link, router } from 'expo-router';
+import HomeScreen from '../src/screens/HomeScreen/HomeScreen';
 
 export default function HomePage() {
-  return (
-    <View>
-      <Text>HomePage</Text>
-      <Link href="/profile">
-        <Text>Go to user page</Text>
-      </Link>
-      <Pressable onPress={() => router.push('/profile')}>
-        <Text>Go to user page 2</Text>
-      </Pressable>
-    </View>
-  );
+  return <HomeScreen></HomeScreen>;
 }
