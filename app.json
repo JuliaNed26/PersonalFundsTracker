@@ -19,10 +19,10 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.PersonalFundsTracker"
     },
-    "web": {
-    },
+    "web": {},
     "plugins": [
       "expo-router"
     ]
