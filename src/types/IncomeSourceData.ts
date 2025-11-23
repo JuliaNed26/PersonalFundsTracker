@@ -1,6 +1,6 @@
-interface IncomeSourceData{
-  id: string;
+export interface IncomeSourceData {
+  id: number;
   name: string;
   balance: number;
-  currencyId: string;
+  currency: number;
 }

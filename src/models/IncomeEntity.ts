@@ -1,7 +1,6 @@
-export interface ExpensesData {
+export interface IncomeEntity {
   id: number;
   name: string;
   balance: number;
-  limit?: number;
   currency: number;
 }

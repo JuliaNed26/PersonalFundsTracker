@@ -1,69 +1,55 @@
-import { useState } from 'react';
-import { View, ScrollView, SafeAreaView, StatusBar } from 'react-native';
+import { View, ScrollView, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
 import IncomeSection from './components/IncomeSection';
 import { StyleSheet } from 'react-native';
 import HeaderCards from './components/HeaderCards';
 import AccountsSection from './components/AccountsSection';
 import ExpensesSection from './components/ExpensesSection';
+import { getAllIncomesAsync, insertIncomeAsync } from '../../db/IncomeRepository';
+import { AccountEntity } from '../../models/AccountEntity';
+import { ExpenseEntity } from '../../models/ExpenseEntity';
+import { useEffect, useState } from 'react';
+import { IncomeEntity } from '../../models/IncomeEntity';
+import { migrateIfNeeded } from '../../db';
 
 export default function HomeScreen() {
-  const [incomes, setIncomes] = useState([
-    { id: '1', name: 'Salary', balance: 20000, currencyId: 'UAH' },
-    { id: '2', name: 'Scholarship', balance: 2000, currencyId: 'UAH' },
-  ]);
+  const [incomes, setIncomes] = useState<IncomeEntity[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [accounts, setAccounts] = useState([
-    { id: '1', name: 'UAN Cash', balance: 2000, currencyId: 'UAH', includeToTotalBalance: true },
-    { id: '2', name: 'Mono card', balance: 20000, currencyId: 'UAH', includeToTotalBalance: true },
-    { id: '3', name: 'Privat card', balance: 3000, currencyId: 'UAH', includeToTotalBalance: true },
-    { id: '4', name: 'UAN Cash 2', balance: 4000, currencyId: 'UAH', includeToTotalBalance: true },
-    {
-      id: '5',
-      name: 'Mono card 2',
-      balance: 23000,
-      currencyId: 'UAH',
-      includeToTotalBalance: true,
-    },
-    {
-      id: '6',
-      name: 'Privat card 2',
-      balance: 5000,
-      currencyId: 'UAH',
-      includeToTotalBalance: true,
-    },
-  ]);
+  useEffect(() => {
+    let cancelled = false;
 
-  const [expenses, setExpenses] = useState([
-    {
-      id: '1',
-      name: 'Groceries',
-      balance: 13645.95,
-      limit: 12000,
-      currencyId: 'UAH',
-    },
-    { id: '2', name: 'House', balance: 3000, limit: 4000, currencyId: 'UAH' },
-    { id: '3', name: 'Entertainment', balance: 0, currencyId: 'UAH' },
-    { id: '4', name: 'Transport', balance: 1450, limit: 1000, currencyId: 'UAH' },
-    { id: '5', name: 'Eating outside', balance: 250, currencyId: 'UAH' },
-    { id: '6', name: 'Health', balance: 0, limit: 5000, currencyId: 'UAH' },
-    {
-      id: '7',
-      name: 'Groceries',
-      balance: 13645.95,
-      limit: 12000,
-      currencyId: 'UAH',
-    },
-    { id: '8', name: 'House', balance: 3000, limit: 4000, currencyId: 'UAH' },
-    { id: '9', name: 'Entertainment', balance: 0, currencyId: 'UAH' },
-    { id: '10', name: 'Transport', balance: 1450, limit: 1000, currencyId: 'UAH' },
-    {
-      id: '11',
-      name: 'Eating outside',
-      balance: 250,
-      currencyId: 'UAH',
-    },
-    { id: '12', name: 'Health', balance: 0, limit: 5000, currencyId: 'UAH' },
-  ]);
+    (async () => {
+      try {
+        await migrateIfNeeded();
+        await insertIncomeAsync({ name: 'Salary', currency: 0 });
+        await insertIncomeAsync({ name: 'Scholarship', currency: 0 });
+
+        const data = await getAllIncomesAsync();
+        if (!cancelled) {
+          setIncomes(data);
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error('Error loading incomes', e);
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const accounts: AccountEntity[] = [];
+  const expenses: ExpenseEntity[] = [];
+
+  if (loading) {
+    return (
+      <View>
+        <ActivityIndicator />
+      </View>
+    );
+  }
 
   const totalAccounts = accounts.reduce(
     (sum, item) => (item.includeToTotalBalance ? sum + item.balance : sum),

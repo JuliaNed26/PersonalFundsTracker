@@ -1,4 +1,4 @@
-export interface ExpensesData {
+export interface ExpenseEntity {
   id: number;
   name: string;
   balance: number;
