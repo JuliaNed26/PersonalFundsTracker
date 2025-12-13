@@ -9,7 +9,6 @@ import { AccountEntity } from '../../models/AccountEntity';
 import { ExpenseEntity } from '../../models/ExpenseEntity';
 import { useEffect, useState } from 'react';
 import { IncomeEntity } from '../../models/IncomeEntity';
-import { migrateIfNeeded } from '../../db';
 
 export default function HomeScreen() {
   const [incomes, setIncomes] = useState<IncomeEntity[]>([]);
@@ -20,7 +19,6 @@ export default function HomeScreen() {
 
     (async () => {
       try {
-        await migrateIfNeeded();
         await insertIncomeAsync({ name: 'Salary', currency: 0 });
         await insertIncomeAsync({ name: 'Scholarship', currency: 0 });
 

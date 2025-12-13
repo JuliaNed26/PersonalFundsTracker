@@ -7,6 +7,6 @@ import migrations from '../../drizzle/migrations/migrations';
 const expoDb = SQLite.openDatabaseSync('personal_funds_tracker.db');
 export const db = drizzle(expoDb, { schema });
 
-export async function migrateIfNeeded() {
+export async function runMigrations() {
   await migrate(db, migrations);
 }

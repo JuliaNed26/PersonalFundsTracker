@@ -4,6 +4,7 @@ export const incomes = sqliteTable('incomes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull().unique(),
   currency: integer('currency').notNull(),
+  balance: real('balance').notNull().default(0),
 });
 
 export const accounts = sqliteTable('accounts', {

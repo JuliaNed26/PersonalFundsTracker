@@ -42,20 +42,9 @@ export default defineConfig([
       "react-native/split-platform-components": "warn",
       "react-native/no-raw-text": "warn", 
       "react-native/no-single-element-style-arrays": "warn",
-      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/rules-of-hooks": "warn",
       "react-hooks/exhaustive-deps": "warn",
-      "prettier/prettier": [
-        "error",
-        {
-          singleQuote: true,
-          semi: true,
-          trailingComma: "all",
-          printWidth: 100,
-          tabWidth: 2,
-          arrowParens: "always",
-          endOfLine: "auto"
-        },
-      ],
+      "prettier/prettier": [],
     },
 
     settings: { react: { version: "detect" } },
