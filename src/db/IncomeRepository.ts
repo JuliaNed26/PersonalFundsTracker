@@ -1,7 +1,7 @@
 import { db } from './index';
 import { incomes } from './schema';
 import type { Income } from './schema';
-import type { IncomeEntity } from '../models/IncomeEntity';
+import type { IncomeEntity } from '../models/entities/IncomeEntity';
 import { eq } from 'drizzle-orm';
 
 export async function getAllIncomesAsync(): Promise<IncomeEntity[]> {
@@ -22,13 +22,12 @@ export async function getIncomeByIdAsync(id: number): Promise<IncomeEntity | nul
 }
 
 export async function insertIncomeAsync(incomeData: Omit<IncomeEntity, 'id'>): Promise<IncomeEntity> {
-  let income = await db.insert(incomes)
-          .values(
-          {
-            name: incomeData.name,
-            currency: incomeData.currency,
-            balance: incomeData.balance
-          }).returning();
+  const inserted = await db.insert(incomes).values({
+    name: incomeData.name,
+    currency: incomeData.currency,
+    balance: incomeData.balance,
+  }).returning();
 
-  return await getIncomeByIdAsync(db.getLastInsertRowid() as number) as IncomeEntity;
+  const row = Array.isArray(inserted) ? inserted[0] : inserted;
+  return row as IncomeEntity;
 }

@@ -1,53 +1,20 @@
 import { View, ScrollView, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
-import IncomeSection from './components/IncomeSection';
 import { StyleSheet } from 'react-native';
-import HeaderCards from './components/HeaderCards';
-import AccountsSection from './components/AccountsSection';
-import ExpensesSection from './components/ExpensesSection';
-import { getAllIncomesAsync, insertIncomeAsync } from '../../db/IncomeRepository';
-import { AccountEntity } from '../../models/AccountEntity';
-import { ExpenseEntity } from '../../models/ExpenseEntity';
 import { useEffect, useState } from 'react';
-import { IncomeEntity } from '../../models/IncomeEntity';
+import { AccountEntity } from '../src/models/entities/AccountEntity';
+import { IncomeEntity } from '../src/models/entities/IncomeEntity';
+import { ExpenseEntity } from '../src/models/entities/ExpenseEntity';
+import HeaderCards from './HomeScreen/components/HeaderCards';
+import IncomeSection from './HomeScreen/components/IncomeSection';
+import AccountsSection from './HomeScreen/components/AccountsSection';
+import ExpensesSection from './HomeScreen/components/ExpensesSection';
 
 export default function HomeScreen() {
   const [incomes, setIncomes] = useState<IncomeEntity[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        await insertIncomeAsync({ name: 'Salary', currency: 0 });
-        await insertIncomeAsync({ name: 'Scholarship', currency: 0 });
-
-        const data = await getAllIncomesAsync();
-        if (!cancelled) {
-          setIncomes(data);
-          setLoading(false);
-        }
-      } catch (e) {
-        console.error('Error loading incomes', e);
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const accounts: AccountEntity[] = [];
   const expenses: ExpenseEntity[] = [];
-
-  if (loading) {
-    return (
-      <View>
-        <ActivityIndicator />
-      </View>
-    );
-  }
 
   const totalAccounts = accounts.reduce(
     (sum, item) => (item.includeToTotalBalance ? sum + item.balance : sum),
@@ -57,7 +24,7 @@ export default function HomeScreen() {
   const totalPlanned = expenses.reduce((sum, item) => sum + (item.limit || 0), 0);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FCD34D" />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
@@ -70,7 +37,7 @@ export default function HomeScreen() {
           <ExpensesSection expenses={expenses} />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import CircleItem from './CircleItem';
 import AddButton from './AddButton';
-import { ExpensesData } from '../../../types/ExpensesData';
+import { ExpensesData } from '../../../src/types/ExpensesData';
 
 interface ExpensesSectionProps {
   expenses: ExpensesData[];
@@ -36,7 +36,7 @@ export default function ExpensesSection({ expenses }: ExpensesSectionProps) {
             limit={expense.limit}
           />
         ))}
-        <AddButton />
+        <AddButton linkToAddPage="/IncomeAddScreen"/>
       </View>
     </View>
   );
@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 12,
     marginBottom: 12,
+    paddingBottom: 12,
   },
   title: {
     fontSize: 18,

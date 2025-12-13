@@ -55,6 +55,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     marginRight: 12,
+    marginBottom: 12,
   },
   circleWrapper: {
     position: 'relative',

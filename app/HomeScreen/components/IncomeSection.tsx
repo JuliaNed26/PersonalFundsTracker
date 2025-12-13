@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import CircleItem from './CircleItem';
 import AddButton from './AddButton';
-import { IncomeSourceData } from '../../../types/IncomeSourceData';
+import { IncomeSourceData } from '../../../src/types/IncomeSourceData';
 
 interface IncomeSectionProps {
   incomes: IncomeSourceData[];
@@ -23,7 +23,7 @@ export default function IncomeSection({ incomes }: IncomeSectionProps) {
         {incomes.map((income) => (
           <CircleItem key={income.id} name={income.name} balance={income.balance} color="green" />
         ))}
-        <AddButton />
+        <AddButton linkToAddPage="/IncomeAddScreen" />
       </ScrollView>
 
       <View style={styles.divider} />
@@ -38,6 +38,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 12,
     marginBottom: 12,
+    paddingTop: 12,
   },
   title: {
     fontSize: 18,

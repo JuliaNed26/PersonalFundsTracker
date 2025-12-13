@@ -1,12 +1,18 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { Link } from 'expo-router';
 
-export default function AddButton() {
+type Props = {
+    linkToAddPage: string;
+};
+
+export default function AddButton({ linkToAddPage }: Props) {
   return (
     <View style={styles.container}>
-      <Pressable style={styles.button}>
-        <Text style={styles.plus}>+</Text>
-      </Pressable>
-      <Text style={styles.label}>Add new</Text>
+      <View style={styles.button}>
+        <Link href={linkToAddPage}>
+          <Text style={styles.plus}>+</Text>
+        </Link>
+      </View>
     </View>
   );
 }
@@ -16,6 +22,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     marginRight: 12,
+    marginBottom: 12,
   },
   button: {
     width: 72,
