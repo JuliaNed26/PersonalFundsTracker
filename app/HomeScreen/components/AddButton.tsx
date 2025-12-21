@@ -1,18 +1,18 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { Link } from 'expo-router';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 
 type Props = {
     linkToAddPage: string;
 };
 
 export default function AddButton({ linkToAddPage }: Props) {
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
-      <View style={styles.button}>
-        <Link href={linkToAddPage}>
+      <TouchableOpacity onPress={() => router.navigate(linkToAddPage)} style={styles.button}>
           <Text style={styles.plus}>+</Text>
-        </Link>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 }
