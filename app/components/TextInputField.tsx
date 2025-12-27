@@ -31,7 +31,6 @@ const styles = StyleSheet.create({
     container: {
         width: "80%",
         height: 100,
-        marginTop: 20,
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-around",

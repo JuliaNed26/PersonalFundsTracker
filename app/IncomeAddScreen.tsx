@@ -4,19 +4,35 @@ import HeaderForEditScreens from "./components/HeaderForEditScreens";
 import { useState } from "react";
 import SubmitButton from "./components/SubmitButton";
 import { useRouter } from "expo-router";
+import DropdownList from "./components/DropdownList";
+import { currencyDropdownData } from "../src/models/constants/CurrencyList";
+import { insertIncomeAsync } from "../src/db/IncomeRepository";
 
 export default function IncomeAddScreen() {
     const router = useRouter();
     const [incomeTypeName, setIncomeTypeName] = useState("");
     const [balance, setBalance] = useState("");
+    const [currency, setCurrency] = useState(0);
 
-    function handleSubmit() {
-        console.log(`${incomeTypeName}, ${balance}`);
+    
+    async function handleSubmit() {
+        const name = incomeTypeName.trim();
+        console.log(`|${balance}|`);
+        const parsedBalance = parseFloat(balance || "0") || 0;
+        console.log({ name, parsedBalance, currency });
+        if (!name) return;
+
+        try {
+            await insertIncomeAsync({ name, balance: parsedBalance, currency });
+        } catch (err) {
+            console.error('Failed to insert income', err);
+        }
+
         router.back();
     }
 
     return (
-        <View>
+        <View style={styles.screenContainer}>
             <HeaderForEditScreens text="Add Income" />
             <View style={styles.formContainer}>
                 <View style={styles.inputsContainer}>
@@ -30,6 +46,11 @@ export default function IncomeAddScreen() {
                         placeholder="0"
                         value={balance}
                         onChangeText={setBalance} />
+                    <DropdownList
+                        data={currencyDropdownData}
+                        setSelected={(key) => setCurrency(key)}
+                        placeholder="Select currency"
+                        label="Choose currency" />
                 </View>
                 <View style={styles.submitButton}>
                     <SubmitButton onHandleSubmit={handleSubmit}/>
@@ -40,12 +61,16 @@ export default function IncomeAddScreen() {
 }
 
 const styles = StyleSheet.create({
+    screenContainer: {
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+    },
     formContainer: {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "flex-start",
-        marginTop: 50,
         height: "60%",
     },
     inputsContainer: {
@@ -58,6 +83,6 @@ const styles = StyleSheet.create({
     },
     submitButton: {
         width: "80%",
-        marginTop: 40,
+        marginTop: 100,
     },
 });

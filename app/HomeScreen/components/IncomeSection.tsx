@@ -1,13 +1,24 @@
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import CircleItem from './CircleItem';
 import AddButton from './AddButton';
 import { IncomeSourceData } from '../../../src/types/IncomeSourceData';
+import { useState } from 'react';
+import { deleteIncomeByIdAsync } from '../../../src/db/IncomeRepository';
 
 interface IncomeSectionProps {
   incomes: IncomeSourceData[];
 }
 
 export default function IncomeSection({ incomes }: IncomeSectionProps) {
+
+  async function handleOnLongPress(incomeId: number) {
+    try {
+      await deleteIncomeByIdAsync(incomeId);
+    } catch (err) {
+      console.error('Failed to delete income', err);
+    }
+  }
+
   return (
     <View>
       <View style={styles.header}>
@@ -21,7 +32,11 @@ export default function IncomeSection({ incomes }: IncomeSectionProps) {
         contentContainerStyle={styles.scrollContent}
       >
         {incomes.map((income) => (
-          <CircleItem key={income.id} name={income.name} balance={income.balance} color="green" />
+          <Pressable
+            key={income.id}
+            onLongPress={() => handleOnLongPress(income.id)}>
+            <CircleItem key={income.id} name={income.name} balance={income.balance} currency={income.currency} color="green" />
+          </Pressable>
         ))}
         <AddButton linkToAddPage="/IncomeAddScreen" />
       </ScrollView>

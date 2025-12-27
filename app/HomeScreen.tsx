@@ -1,6 +1,6 @@
 import { View, ScrollView, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
 import { StyleSheet } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { AccountEntity } from '../src/models/entities/AccountEntity';
 import { IncomeEntity } from '../src/models/entities/IncomeEntity';
 import { ExpenseEntity } from '../src/models/entities/ExpenseEntity';
@@ -8,10 +8,11 @@ import HeaderCards from './HomeScreen/components/HeaderCards';
 import IncomeSection from './HomeScreen/components/IncomeSection';
 import AccountsSection from './HomeScreen/components/AccountsSection';
 import ExpensesSection from './HomeScreen/components/ExpensesSection';
+import { getAllIncomesAsync } from '../src/db/IncomeRepository';
+import { useFocusEffect } from 'expo-router';
 
 export default function HomeScreen() {
   const [incomes, setIncomes] = useState<IncomeEntity[]>([]);
-
 
   const accounts: AccountEntity[] = [];
   const expenses: ExpenseEntity[] = [];
@@ -23,6 +24,17 @@ export default function HomeScreen() {
   const totalExpenses = expenses.reduce((sum, item) => sum + item.balance, 0);
   const totalPlanned = expenses.reduce((sum, item) => sum + (item.limit || 0), 0);
 
+  useFocusEffect(() => {
+    (async () => {
+      try {
+        const list = await getAllIncomesAsync();
+        setIncomes(list);
+      } catch (err) {
+        console.error('Failed to load incomes', err);
+      }
+    })();
+  });
+  
   return (
     <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FCD34D" />

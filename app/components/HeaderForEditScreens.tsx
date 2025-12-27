@@ -1,6 +1,5 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from 'expo-router';
-import { text } from "drizzle-orm/gel-core";
 
 type Props = {
     text: string;
