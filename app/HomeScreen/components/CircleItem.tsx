@@ -4,7 +4,7 @@ import { currencyMap } from '../../../src/models/constants/CurrencyList';
 interface CircleItemProps {
   name: string;
   balance?: number;
-  currency: number;
+  currency?: number;
   color: 'green' | 'orange' | 'gray' | 'red';
   showLimit?: boolean;
   limit?: number;

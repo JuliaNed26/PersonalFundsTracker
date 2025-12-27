@@ -19,7 +19,6 @@ export async function getIncomeByIdAsync(id: number): Promise<IncomeEntity | nul
   var income = (
     await db.select().from(incomes).where(eq(incomes.id, id)).limit(1)
   )[0] as IncomeEntity | null;
-  console.log(income?.balance);
   return income;
 }
 
@@ -31,7 +30,6 @@ export async function insertIncomeAsync(incomeData: Omit<IncomeEntity, 'id'>): P
   }).returning();
 
   const row = Array.isArray(inserted) ? inserted[0] : inserted;
-  console.log(row.balance);
   return row as IncomeEntity;
 }
 

@@ -7,19 +7,23 @@ import { useRouter } from "expo-router";
 import DropdownList from "./components/DropdownList";
 import { currencyDropdownData } from "../src/models/constants/CurrencyList";
 import { insertIncomeAsync } from "../src/db/IncomeRepository";
+import { IncomeAddFormErrors } from "./IncomeAddScreen/Errors";
 
 export default function IncomeAddScreen() {
     const router = useRouter();
     const [incomeTypeName, setIncomeTypeName] = useState("");
-    const [balance, setBalance] = useState("");
+    const [balance, setBalance] = useState("0");
     const [currency, setCurrency] = useState(0);
-
+    const [errors, setErrors] = useState<IncomeAddFormErrors>({});
     
     async function handleSubmit() {
+        var isValid = validate();
+        if (!isValid) 
+        {
+            return;
+        }
         const name = incomeTypeName.trim();
-        console.log(`|${balance}|`);
         const parsedBalance = parseFloat(balance || "0") || 0;
-        console.log({ name, parsedBalance, currency });
         if (!name) return;
 
         try {
@@ -31,6 +35,24 @@ export default function IncomeAddScreen() {
         router.back();
     }
 
+    function validate() : boolean {
+        const name = incomeTypeName.trim();
+        let isValid = true;
+        if (!name)
+        {
+            setErrors((prev) => ({ ...prev, nameErrorMessage: "Name is required" }));
+            isValid = false;
+        }
+
+        if (Number.isNaN(parseFloat(balance))) 
+        {
+            setErrors((prev) => ({ ...prev, balanceErrorMessage: "Balance must be a number" }));
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
     return (
         <View style={styles.screenContainer}>
             <HeaderForEditScreens text="Add Income" />
@@ -40,17 +62,20 @@ export default function IncomeAddScreen() {
                         label="Income type name"
                         placeholder="Enter name" 
                         value={incomeTypeName}
-                        onChangeText={setIncomeTypeName}/>
+                        onChangeText={setIncomeTypeName}
+                        errorMessage={errors.nameErrorMessage}/>
                     <TextInputField 
                         label="Balance" 
                         placeholder="0"
                         value={balance}
-                        onChangeText={setBalance} />
+                        onChangeText={setBalance}
+                        errorMessage={errors.balanceErrorMessage}/>
                     <DropdownList
                         data={currencyDropdownData}
+                        defaultOption={currencyDropdownData[0]}
                         setSelected={(key) => setCurrency(key)}
                         placeholder="Select currency"
-                        label="Choose currency" />
+                        label="Choose currency"/>
                 </View>
                 <View style={styles.submitButton}>
                     <SubmitButton onHandleSubmit={handleSubmit}/>

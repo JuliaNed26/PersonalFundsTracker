@@ -12,17 +12,20 @@ type Props = {
     placeholder: string;
     value: string;
     onChangeText: (text: string) => void;
+    errorMessage?: string;
 } & TextInputProps;
 
-export default function TextInputField({ label, placeholder, value, onChangeText }: Props) {
+export default function TextInputField({ label, placeholder, value, onChangeText, errorMessage }: Props) {
     return (
         <View style={styles.container}>
             {label ? <Text style={styles.label}>{label}</Text> : null}
-            <TextInput style={styles.textInput}
+            <TextInput style={[styles.textInput, errorMessage && styles.textInputError]}
                 placeholder={placeholder}
                 value={value}
                 onChangeText={onChangeText}
             />
+
+            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
         </View>
     );
 }
@@ -45,5 +48,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 8,
         padding: 12,
-    }
+    },
+    textInputError: { borderColor: "red" },
+    errorText: { color: "red", fontSize: 12 },
 });

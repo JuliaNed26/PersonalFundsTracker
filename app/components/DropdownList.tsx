@@ -3,12 +3,13 @@ import { SelectList } from 'react-native-dropdown-select-list';
 
 type Props = {
     data: { key: number; value: string }[];
+    defaultOption?: { key: number; value: string };
     setSelected: (key: number) => void;
     placeholder: string;
     label?: string;
 };
 
-export default function DropdownList({ data, setSelected, placeholder, label }: Props) {
+export default function DropdownList({ data, defaultOption, setSelected, placeholder, label }: Props) {
     return <View style={style.container}>
             {label ? <Text style={style.label}>{label}</Text> : null}
             <SelectList 
@@ -16,7 +17,8 @@ export default function DropdownList({ data, setSelected, placeholder, label }: 
                 setSelected={setSelected} 
                 placeholder={placeholder}
                 search={false}
-                boxStyles={style.dropdown} />
+                boxStyles={style.dropdown}
+                defaultOption={defaultOption} />
         </View>;
 }
 
