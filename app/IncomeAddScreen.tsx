@@ -7,7 +7,7 @@ import { useRouter } from "expo-router";
 import DropdownList from "./components/DropdownList";
 import { currencyDropdownData } from "../src/models/constants/CurrencyList";
 import { insertIncomeAsync } from "../src/db/IncomeRepository";
-import { IncomeAddFormErrors } from "./IncomeAddScreen/Errors";
+import { IncomeAddFormErrors } from "./IncomeAddScreen/models/Errors";
 
 export default function IncomeAddScreen() {
     const router = useRouter();

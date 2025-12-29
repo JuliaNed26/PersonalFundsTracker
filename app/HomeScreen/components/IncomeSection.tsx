@@ -4,18 +4,39 @@ import AddButton from './AddButton';
 import { IncomeSourceData } from '../../../src/types/IncomeSourceData';
 import { useState } from 'react';
 import { deleteIncomeByIdAsync } from '../../../src/db/IncomeRepository';
+import Modal from '../../components/Modal';
 
 interface IncomeSectionProps {
   incomes: IncomeSourceData[];
 }
 
 export default function IncomeSection({ incomes }: IncomeSectionProps) {
+  const [incomesModalOpen, setIncomesModalOpen] = useState(false);
+  const [deleteIncomeModalOpen, setDeleteIncomeModalOpen] = useState(false);
+  const [pressedIncome, setPressedIncome] = useState<IncomeSourceData | null>(null);
 
-  async function handleOnLongPress(incomeId: number) {
-    try {
-      await deleteIncomeByIdAsync(incomeId);
-    } catch (err) {
-      console.error('Failed to delete income', err);
+  async function handleOnLongPress(income: IncomeSourceData) {
+    setIncomesModalOpen(true);
+    setPressedIncome(income);
+  }
+
+  async function handleDeleteActionAccepted() {
+    setIncomesModalOpen(false);
+    setDeleteIncomeModalOpen(true); 
+  }
+
+  async function handleDeleteIncome() {
+    if (pressedIncome)
+    {
+      try 
+      {
+        await deleteIncomeByIdAsync(pressedIncome.id);
+        setDeleteIncomeModalOpen(false);
+      } 
+      catch (err) 
+      {
+        console.error('Failed to delete income', err);
+      }
     }
   }
 
@@ -34,7 +55,7 @@ export default function IncomeSection({ incomes }: IncomeSectionProps) {
         {incomes.map((income) => (
           <Pressable
             key={income.id}
-            onLongPress={() => handleOnLongPress(income.id)}>
+            onLongPress={() => handleOnLongPress(income)}>
             <CircleItem key={income.id} name={income.name} balance={income.balance} currency={income.currency} color="green" />
           </Pressable>
         ))}
@@ -42,6 +63,24 @@ export default function IncomeSection({ incomes }: IncomeSectionProps) {
       </ScrollView>
 
       <View style={styles.divider} />
+      
+      <Modal
+        visible={incomesModalOpen}
+        setIsVisible={setIncomesModalOpen} 
+        text={`What do you want to do with the income source ${pressedIncome?.name}?`} 
+        firstButtonText='Update'
+        firstButtonAction={() => {}}
+        secondButtonText='Delete'
+        secondButtonAction={handleDeleteActionAccepted}/>
+      
+      <Modal
+        visible={deleteIncomeModalOpen}
+        setIsVisible={setDeleteIncomeModalOpen}
+        text={`Are you sure you want to delete income ${pressedIncome?.name}?`} 
+        firstButtonText='Cancel'
+        firstButtonAction={() => {setDeleteIncomeModalOpen(false)}}
+        secondButtonText='Yes'
+        secondButtonAction={handleDeleteIncome}/>
     </View>
   );
 }
