@@ -6,6 +6,7 @@ export default function RootLayout() {
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="HomeScreen" options={{ headerShown: false }} />
             <Stack.Screen name="IncomeAddScreen" options={{ headerShown: false }} />
+            <Stack.Screen name="IncomeUpdateScreen" options={{ headerShown: false }} />
         </Stack>
     )
 }

@@ -5,12 +5,15 @@ import { IncomeSourceData } from '../../../src/types/IncomeSourceData';
 import { useState } from 'react';
 import { deleteIncomeByIdAsync } from '../../../src/db/IncomeRepository';
 import Modal from '../../components/Modal';
+import { useRouter } from 'expo-router';
 
 interface IncomeSectionProps {
   incomes: IncomeSourceData[];
+  onRefresh?: () => Promise<void> | void;
 }
 
-export default function IncomeSection({ incomes }: IncomeSectionProps) {
+export default function IncomeSection({ incomes, onRefresh }: IncomeSectionProps) {
+  const router = useRouter();
   const [incomesModalOpen, setIncomesModalOpen] = useState(false);
   const [deleteIncomeModalOpen, setDeleteIncomeModalOpen] = useState(false);
   const [pressedIncome, setPressedIncome] = useState<IncomeSourceData | null>(null);
@@ -32,12 +35,21 @@ export default function IncomeSection({ incomes }: IncomeSectionProps) {
       {
         await deleteIncomeByIdAsync(pressedIncome.id);
         setDeleteIncomeModalOpen(false);
+        if (onRefresh) await onRefresh();
       } 
       catch (err) 
       {
         console.error('Failed to delete income', err);
       }
     }
+  }
+
+  async function handleUpdateIncome() {
+    setIncomesModalOpen(false);
+    router.push({
+      pathname: '/IncomeUpdateScreen',
+      params: { incomeId: pressedIncome?.id }
+    });
   }
 
   return (
@@ -69,7 +81,7 @@ export default function IncomeSection({ incomes }: IncomeSectionProps) {
         setIsVisible={setIncomesModalOpen} 
         text={`What do you want to do with the income source ${pressedIncome?.name}?`} 
         firstButtonText='Update'
-        firstButtonAction={() => {}}
+        firstButtonAction={handleUpdateIncome}
         secondButtonText='Delete'
         secondButtonAction={handleDeleteActionAccepted}/>
       

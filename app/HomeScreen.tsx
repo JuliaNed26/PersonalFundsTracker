@@ -1,6 +1,6 @@
 import { View, ScrollView, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
 import { StyleSheet } from 'react-native';
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { AccountEntity } from '../src/models/entities/AccountEntity';
 import { IncomeEntity } from '../src/models/entities/IncomeEntity';
 import { ExpenseEntity } from '../src/models/entities/ExpenseEntity';
@@ -24,16 +24,41 @@ export default function HomeScreen() {
   const totalExpenses = expenses.reduce((sum, item) => sum + item.balance, 0);
   const totalPlanned = expenses.reduce((sum, item) => sum + (item.limit || 0), 0);
 
-  useFocusEffect(() => {
-    (async () => {
-      try {
-        const list = await getAllIncomesAsync();
-        setIncomes(list);
-      } catch (err) {
-        console.error('Failed to load incomes', err);
-      }
-    })();
-  });
+  const fetchIncomes = useCallback(async (): Promise<IncomeEntity[]> => {
+    return await getAllIncomesAsync();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      (async () => {
+        try {
+          const list = await fetchIncomes();
+          if (isActive) setIncomes(list);
+        } catch (err) {
+          console.error('Failed to load incomes', err);
+        }
+      })();
+
+      return () => {
+        isActive = false;
+      };
+    }, [fetchIncomes]),
+  );
+
+  async function handleOnRefresh()
+  {
+    try 
+    { 
+      const list = await fetchIncomes(); 
+      setIncomes(list); 
+    } 
+    catch (err) 
+    { 
+      console.error('Failed to refresh incomes', err);
+    }
+  }
   
   return (
     <View style={styles.safeArea}>
@@ -44,7 +69,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.contentContainer}>
-          <IncomeSection incomes={incomes} />
+          <IncomeSection incomes={incomes} onRefresh={handleOnRefresh} />
           <AccountsSection accounts={accounts} />
           <ExpensesSection expenses={expenses} />
         </View>
