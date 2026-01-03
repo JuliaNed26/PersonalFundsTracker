@@ -1,7 +1,7 @@
 export interface AccountData {
-  id: string;
+  id: number;
   name: string;
   balance: number;
-  currencyId: string;
+  currency: number;
   includeToTotalBalance: boolean;
 }

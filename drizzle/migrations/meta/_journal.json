@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1763916069029,
+      "tag": "0000_living_whistler",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1765648098914,
+      "tag": "0001_quick_sebastian_shaw",
+      "breakpoints": true
+    }
+  ]
+}

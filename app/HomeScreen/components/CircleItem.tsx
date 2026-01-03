@@ -1,14 +1,16 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { currencyMap } from '../../../src/models/constants/CurrencyList';
 
 interface CircleItemProps {
   name: string;
   balance?: number;
+  currency?: number;
   color: 'green' | 'orange' | 'gray' | 'red';
   showLimit?: boolean;
   limit?: number;
 }
 
-export default function CircleItem({ name, balance, color, showLimit, limit }: CircleItemProps) {
+export default function CircleItem({ name, balance, currency, color, showLimit, limit }: CircleItemProps) {
   const colorStyle = {
     green: styles.circleGreen,
     orange: styles.circleOrange,
@@ -29,9 +31,6 @@ export default function CircleItem({ name, balance, color, showLimit, limit }: C
         <View style={[styles.circle, colorStyle[color]]}>
           <Text style={[styles.icon, iconColor[color]]}>●</Text>
         </View>
-        <Pressable style={styles.menuButton}>
-          <Text style={styles.menuDots}>⋮</Text>
-        </Pressable>
       </View>
 
       <Text style={styles.name}>{name}</Text>
@@ -41,7 +40,7 @@ export default function CircleItem({ name, balance, color, showLimit, limit }: C
           {`${balance.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
-          })} UAN`}
+          })} ${currencyMap.get(currency) || ''}`}
         </Text>
       )}
 
@@ -55,6 +54,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     marginRight: 12,
+    marginBottom: 12,
   },
   circleWrapper: {
     position: 'relative',
@@ -93,16 +93,6 @@ const styles = StyleSheet.create({
   },
   iconGray: {
     color: '#9CA3AF',
-  },
-  menuButton: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 10,
   },
   menuDots: {
     fontSize: 14,

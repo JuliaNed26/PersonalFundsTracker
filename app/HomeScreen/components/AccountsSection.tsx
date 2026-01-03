@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import CircleItem from './CircleItem';
 import AddButton from './AddButton';
-import { AccountData } from '../../../types/AccountData';
+import { AccountData } from '../../../src/types/AccountData';
 
 interface AccountsSectionProps {
   accounts: AccountData[];
@@ -28,7 +28,7 @@ export default function AccountsSection({ accounts }: AccountsSectionProps) {
             color="orange"
           />
         ))}
-        <AddButton />
+        <AddButton linkToAddPage="/IncomeAddScreen"/>
       </ScrollView>
 
       <View style={styles.divider} />

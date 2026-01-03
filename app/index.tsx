@@ -1,5 +1,7 @@
-import HomeScreen from '../src/screens/HomeScreen/HomeScreen';
+import { Redirect } from 'expo-router';
+import { runMigrations } from '../src/db';
 
-export default function HomePage() {
-  return <HomeScreen></HomeScreen>;
+export default function App() {
+  (async () => await runMigrations())();
+  return <Redirect href="/HomeScreen" />;
 }

@@ -1,7 +1,7 @@
-export interface ExpensesData {
+export interface AccountEntity {
   id: number;
   name: string;
   balance: number;
-  limit?: number;
   currency: number;
+  includeToTotalBalance: boolean;
 }

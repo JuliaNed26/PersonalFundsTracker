@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface HeaderCardsProps {
   balance: number;
@@ -7,28 +8,27 @@ interface HeaderCardsProps {
 }
 
 export default function HeaderCards({ balance, expenses, planned }: HeaderCardsProps) {
+  const cards = [
+    { key: 'balance', label: 'Balance', value: balance },
+    { key: 'expenses', label: 'Expenses', value: expenses },
+    { key: 'planned', label: 'Planned', value: planned },
+  ];
+
+  const format = (val: number) =>
+    val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   return (
     <View style={styles.container}>
       <View style={styles.cardsWrapper}>
-        <View style={[styles.card, styles.balanceCard]}>
-          <Text style={styles.cardLabel}>Balance</Text>
-          <Text style={styles.cardValue}>{balance.toLocaleString()} UAN</Text>
-        </View>
-
-        <View style={[styles.card, styles.expensesCard]}>
-          <Text style={styles.cardLabel}>Expenses</Text>
-          <Text style={styles.cardValue}>
-            {`${expenses.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })} UAN`}
-          </Text>
-        </View>
-
-        <View style={[styles.card, styles.plannedCard]}>
-          <Text style={styles.cardLabel}>Planned</Text>
-          <Text style={styles.cardValue}>{planned.toLocaleString()} UAN</Text>
-        </View>
+        {cards.map((c, i) => (
+          <LinearGradient
+            key={c.key}
+            colors={['#B4C15F', '#7F8943']}
+            style={[styles.card, i !== cards.length - 1 && styles.cardSpacing]}>
+            <Text style={styles.cardLabel}>{c.label}</Text>
+            <Text style={styles.cardValue}>{`${format(c.value)} UAN`}</Text>
+          </LinearGradient>
+        ))}
       </View>
 
       <View style={styles.menuIcon}>
@@ -45,11 +45,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 12,
     paddingVertical: 12,
-    gap: 12,
   },
   cardsWrapper: {
     flex: 1,
-    gap: 8,
     flexDirection: 'row',
   },
   card: {
@@ -63,14 +61,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  balanceCard: {
-    backgroundColor: '#CA8A04',
-  },
-  expensesCard: {
-    backgroundColor: '#CA8A04',
-  },
-  plannedCard: {
-    backgroundColor: '#CA8A04',
+  cardSpacing: {
+    marginRight: 8,
   },
   cardLabel: {
     fontSize: 12,
