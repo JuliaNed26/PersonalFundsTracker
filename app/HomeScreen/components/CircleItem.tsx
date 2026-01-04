@@ -40,7 +40,7 @@ export default function CircleItem({ name, balance, currency, color, showLimit, 
           {`${balance.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
-          })} ${currencyMap.get(currency) || ''}`}
+          })} ${currency !== undefined && currencyMap.get(currency) || ''}`}
         </Text>
       )}
 

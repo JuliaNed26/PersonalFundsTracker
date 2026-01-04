@@ -4,7 +4,7 @@ import HeaderForEditScreens from "./components/HeaderForEditScreens";
 import { useEffect, useState } from "react";
 import SubmitButton from "./components/SubmitButton";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { getIncomeByIdAsync, updateIncomeAsync } from "../src/db/IncomeRepository";
+import { getIncomeByIdAsync, updateIncomeAsync } from "../src/db/Repositories/IncomeRepository";
 import { IncomeFormErrors } from "./IncomeFormScreens/models/Errors";
 import { IncomeEntity } from "../src/models/entities/IncomeEntity";
 

@@ -8,13 +8,14 @@ import HeaderCards from './HomeScreen/components/HeaderCards';
 import IncomeSection from './HomeScreen/components/IncomeSection';
 import AccountsSection from './HomeScreen/components/AccountsSection';
 import ExpensesSection from './HomeScreen/components/ExpensesSection';
-import { getAllIncomesAsync } from '../src/db/IncomeRepository';
+import { getAllIncomesAsync } from '../src/db/Repositories/IncomeRepository';
 import { useFocusEffect } from 'expo-router';
+import { getAllAccountsAsync } from '../src/db/Repositories/AccountRepositiory';
 
 export default function HomeScreen() {
   const [incomes, setIncomes] = useState<IncomeEntity[]>([]);
+  const [accounts, setAccounts] = useState<AccountEntity[]>([]);
 
-  const accounts: AccountEntity[] = [];
   const expenses: ExpenseEntity[] = [];
 
   const totalAccounts = accounts.reduce(
@@ -27,6 +28,10 @@ export default function HomeScreen() {
   const fetchIncomes = useCallback(async (): Promise<IncomeEntity[]> => {
     return await getAllIncomesAsync();
   }, []);
+  
+  const fetchAccounts = useCallback(async (): Promise<AccountEntity[]> => {
+    return await getAllAccountsAsync();
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -34,8 +39,12 @@ export default function HomeScreen() {
 
       (async () => {
         try {
-          const list = await fetchIncomes();
-          if (isActive) setIncomes(list);
+          const incomesList = await fetchIncomes();
+          const accountsList = await fetchAccounts();
+          if (isActive) {
+            setIncomes(incomesList);
+            setAccounts(accountsList);
+          }
         } catch (err) {
           console.error('Failed to load incomes', err);
         }
@@ -44,15 +53,17 @@ export default function HomeScreen() {
       return () => {
         isActive = false;
       };
-    }, [fetchIncomes]),
+    }, [fetchIncomes, fetchAccounts]),
   );
 
   async function handleOnRefresh()
   {
     try 
     { 
-      const list = await fetchIncomes(); 
-      setIncomes(list); 
+      const incomesList = await fetchIncomes();
+      const accountsList = await fetchAccounts();
+      setIncomes(incomesList);
+      setAccounts(accountsList);
     } 
     catch (err) 
     { 
@@ -70,7 +81,7 @@ export default function HomeScreen() {
 
         <View style={styles.contentContainer}>
           <IncomeSection incomes={incomes} onRefresh={handleOnRefresh} />
-          <AccountsSection accounts={accounts} />
+          <AccountsSection accounts={accounts} onRefresh={handleOnRefresh}/>
           <ExpensesSection expenses={expenses} />
         </View>
       </ScrollView>

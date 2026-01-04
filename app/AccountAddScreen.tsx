@@ -1,41 +1,46 @@
-import { StyleSheet, View } from "react-native"
-import TextInputField from "./components/TextInputField";
-import HeaderForEditScreens from "./components/HeaderForEditScreens";
-import { useState } from "react";
-import SubmitButton from "./components/SubmitButton";
 import { useRouter } from "expo-router";
+import { useState } from "react";
+import { AccountEntity } from "../src/models/entities/AccountEntity";
+import { insertAccountAsync } from "../src/db/Repositories/AccountRepositiory";
+import { StyleSheet, Switch, Text, View } from "react-native";
+import HeaderForEditScreens from "./components/HeaderForEditScreens";
+import TextInputField from "./components/TextInputField";
 import DropdownList from "./components/DropdownList";
 import { currencyDropdownData } from "../src/models/constants/CurrencyList";
-import { insertIncomeAsync } from "../src/db/Repositories/IncomeRepository";
-import { IncomeFormErrors } from "./IncomeFormScreens/models/Errors";
+import SubmitButton from "./components/SubmitButton";
+import { AccountFormErrors } from "./AccountFormScreens/Errors";
+import Toggle from "./components/Toggle";
 
-export default function IncomeAddScreen() {
+export default function AccountAddScreen() {
     const router = useRouter();
-    const [incomeTypeName, setIncomeTypeName] = useState("");
-    const [balance, setBalance] = useState("0");
-    const [currency, setCurrency] = useState(0);
-    const [errors, setErrors] = useState<IncomeFormErrors>({});
-    
+    const [accountToAdd, setAccountToAdd] = useState<AccountEntity>({
+        id: 0,
+        name: "",
+        currency: 0,
+        balance: 0,
+        includeToTotalBalance: true,
+    } as AccountEntity);
+    const [errors, setErrors] = useState<AccountFormErrors>({});
+
     async function handleSubmit() {
         var isValid = validate();
         if (!isValid) 
         {
             return;
         }
-        const name = incomeTypeName.trim();
-        const parsedBalance = parseFloat(balance || "0") || 0;
-
+        
         try {
-            await insertIncomeAsync({ name, balance: parsedBalance, currency });
-        } catch (err) {
-            console.error('Failed to insert income', err);
+            await insertAccountAsync(accountToAdd);
+        }
+        catch (err) {
+            console.error('Failed to insert account', err);
         }
 
         router.back();
     }
 
     function validate() : boolean {
-        const name = incomeTypeName.trim();
+        const name = accountToAdd.name.trim();
         let isValid = true;
         if (!name)
         {
@@ -43,7 +48,7 @@ export default function IncomeAddScreen() {
             isValid = false;
         }
 
-        if (Number.isNaN(parseFloat(balance))) 
+        if (Number.isNaN(accountToAdd.balance)) 
         {
             setErrors((prev) => ({ ...prev, balanceErrorMessage: "Balance must be a number" }));
             isValid = false;
@@ -54,27 +59,32 @@ export default function IncomeAddScreen() {
 
     return (
         <View style={styles.screenContainer}>
-            <HeaderForEditScreens text="Add Income" />
+            <HeaderForEditScreens text="Add Account" />
             <View style={styles.formContainer}>
                 <View style={styles.inputsContainer}>
                     <TextInputField 
-                        label="Income type name"
+                        label="Account name"
                         placeholder="Enter name" 
-                        value={incomeTypeName}
-                        onChangeText={setIncomeTypeName}
+                        value={accountToAdd.name}
+                        onChangeText={(text) => setAccountToAdd((prev) => ({ ...prev, name: text }))}
                         errorMessage={errors.nameErrorMessage}/>
                     <TextInputField 
                         label="Balance" 
                         placeholder="0"
-                        value={balance}
-                        onChangeText={setBalance}
+                        value={accountToAdd.balance.toString()}
+                        onChangeText={(text) => setAccountToAdd((prev) => ({ ...prev, balance: parseFloat(text) || 0 }))}
                         errorMessage={errors.balanceErrorMessage}/>
                     <DropdownList
                         data={currencyDropdownData}
                         defaultOption={currencyDropdownData[0]}
-                        setSelected={(key) => setCurrency(key)}
+                        setSelected={(option) => setAccountToAdd((prev) => ({ ...prev, currency: option }))}
                         placeholder="Select currency"
                         label="Choose currency"/>
+                    <Toggle 
+                        value={accountToAdd.includeToTotalBalance}
+                        onValueChange={(value) => setAccountToAdd((prev) => ({ ...prev, includeToTotalBalance: value }))}
+                        text="Include into total balance"
+                    />
                 </View>
                 <View style={styles.submitButton}>
                     <SubmitButton onHandleSubmit={handleSubmit}/>
@@ -109,5 +119,5 @@ const styles = StyleSheet.create({
     submitButton: {
         width: "80%",
         marginTop: 100,
-    },
+    }
 });

@@ -17,7 +17,8 @@ export default function DropdownList({ data, defaultOption, setSelected, placeho
                 setSelected={setSelected} 
                 placeholder={placeholder}
                 search={false}
-                boxStyles={style.dropdown}
+                boxStyles={style.dropdownBox}
+                dropdownStyles={style.dropdown}
                 defaultOption={defaultOption} />
         </View>;
 }
@@ -28,13 +29,18 @@ const style = StyleSheet.create({
         height: 100,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-around",
+        justifyContent: "space-around"
     },
-    dropdown: {
+    dropdownBox: {
         borderColor: "#4D4D4D",
         borderWidth: 1,
         borderRadius: 8,
-        height: 50,
+        height: 50
+    },
+    dropdown: {
+        backgroundColor: '#f2f2f2',
+        zIndex: 1000,
+        elevation: 1000
     },
     label: {
         fontSize: 18,

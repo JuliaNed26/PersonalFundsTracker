@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, SQLiteBoolean } from 'drizzle-orm/sqlite-core';
 
 export const incomes = sqliteTable('incomes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -10,8 +10,9 @@ export const incomes = sqliteTable('incomes', {
 export const accounts = sqliteTable('accounts', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull().unique(),
+  balance: real('balance').notNull().default(0),
   currency: integer('currency').notNull(),
-  includeToTotalBalance: integer('includeToTotalBalance').notNull().default(1),
+  includeToTotalBalance: integer('includeToTotalBalance', {mode: 'boolean'}).notNull().default(true),
 });
 
 export const expenses = sqliteTable('expenses', {
