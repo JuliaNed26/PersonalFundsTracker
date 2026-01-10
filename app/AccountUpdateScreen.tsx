@@ -28,7 +28,6 @@ export default function AccountUpdateScreen() {
             return;
         }
         var accountId = parseInt(accountIdParam);
-        console.log(accountId);
         
         (async () => {
             try {
@@ -44,7 +43,6 @@ export default function AccountUpdateScreen() {
                     balance: account.balance,
                     includeToTotalBalance: account.includeToTotalBalance
                 } as AccountUpdateEntity;
-                console.log(mappedAccount);
                 setAccountToUpdate(mappedAccount);
             }
             catch {

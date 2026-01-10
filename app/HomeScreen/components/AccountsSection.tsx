@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import CircleItem from './CircleItem';
 import AddButton from './AddButton';
-import { AccountData } from '../../../src/types/AccountData';
+import { AccountData } from '../../../src/models/data/AccountData';
 import Modal from '../../components/Modal';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';

@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, SQLiteBoolean } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, SQLiteBoolean, primaryKey } from 'drizzle-orm/sqlite-core';
 
 export const incomes = sqliteTable('incomes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -55,6 +55,18 @@ export const expenseTransactions = sqliteTable('expenseTransactions', {
   sumReceived: real('sumReceived').notNull(),
   date: text('date').notNull(),
 });
+
+export const exchangeRates = sqliteTable(
+  'exchangeRates',
+  {
+    base: integer('base').notNull(),
+    quote: integer('quote').notNull(),
+    rate: real('rate').notNull()
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.base, table.quote] })
+  })
+);
 
 export type Income = typeof incomes.$inferSelect;
 export type Account = typeof accounts.$inferSelect;

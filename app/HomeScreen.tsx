@@ -11,17 +11,22 @@ import ExpensesSection from './HomeScreen/components/ExpensesSection';
 import { getAllIncomesAsync } from '../src/db/Repositories/IncomeRepository';
 import { useFocusEffect } from 'expo-router';
 import { getAllAccountsAsync } from '../src/db/Repositories/AccountRepositiory';
+import { AccountListData } from '../src/models/data/AccountListData';
+import { getAccountsList as getAccountsListAsync } from '../src/services/AccountService';
+import { currencyMap } from '../src/models/constants/CurrencyList';
+import { Currency } from '../src/models/enums/Currency';
+import { getDefaultCurrencySetting } from '../src/services/async-storage/AsyncStorageService';
 
 export default function HomeScreen() {
+  const [defaultCurrencySymbol, setDefaultCurrencySymbol] = useState<string>(currencyMap.get(Currency.UAH) || '');
   const [incomes, setIncomes] = useState<IncomeEntity[]>([]);
-  const [accounts, setAccounts] = useState<AccountEntity[]>([]);
+  const [accountsList, setAccountsList] = useState<AccountListData>({
+    accounts: [],
+    totalBalance: 0
+  });
 
   const expenses: ExpenseEntity[] = [];
 
-  const totalAccounts = accounts.reduce(
-    (sum, item) => (item.includeToTotalBalance ? sum + item.balance : sum),
-    0,
-  );
   const totalExpenses = expenses.reduce((sum, item) => sum + item.balance, 0);
   const totalPlanned = expenses.reduce((sum, item) => sum + (item.limit || 0), 0);
 
@@ -29,8 +34,13 @@ export default function HomeScreen() {
     return await getAllIncomesAsync();
   }, []);
   
-  const fetchAccounts = useCallback(async (): Promise<AccountEntity[]> => {
-    return await getAllAccountsAsync();
+  const fetchAccounts = useCallback(async (): Promise<AccountListData> => {
+    return await getAccountsListAsync();
+  }, []);
+
+  const getDefaultCurrencySymbol = useCallback(async (): Promise<string> => {
+    var defaultCurrency = await getDefaultCurrencySetting();
+    return currencyMap.get(defaultCurrency) || '';
   }, []);
 
   useFocusEffect(
@@ -41,9 +51,11 @@ export default function HomeScreen() {
         try {
           const incomesList = await fetchIncomes();
           const accountsList = await fetchAccounts();
+          const defafaultCurrencySymbol = await getDefaultCurrencySymbol();
           if (isActive) {
             setIncomes(incomesList);
-            setAccounts(accountsList);
+            setAccountsList(accountsList);
+            setDefaultCurrencySymbol(defafaultCurrencySymbol);
           }
         } catch (err) {
           console.error('Failed to load incomes', err);
@@ -63,7 +75,7 @@ export default function HomeScreen() {
       const incomesList = await fetchIncomes();
       const accountsList = await fetchAccounts();
       setIncomes(incomesList);
-      setAccounts(accountsList);
+      setAccountsList(accountsList);
     } 
     catch (err) 
     { 
@@ -76,12 +88,16 @@ export default function HomeScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#FCD34D" />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <HeaderCards balance={totalAccounts} expenses={totalExpenses} planned={totalPlanned} />
+          <HeaderCards 
+            balance={accountsList.totalBalance} 
+            expenses={totalExpenses} 
+            planned={totalPlanned} 
+            defaultCurrencySymbol={defaultCurrencySymbol} />
         </View>
 
         <View style={styles.contentContainer}>
           <IncomeSection incomes={incomes} onRefresh={handleOnRefresh} />
-          <AccountsSection accounts={accounts} onRefresh={handleOnRefresh}/>
+          <AccountsSection accounts={accountsList.accounts} onRefresh={handleOnRefresh}/>
           <ExpensesSection expenses={expenses} />
         </View>
       </ScrollView>
