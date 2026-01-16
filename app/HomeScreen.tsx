@@ -1,23 +1,23 @@
 import { View, ScrollView, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
 import { StyleSheet } from 'react-native';
 import { useState, useCallback } from 'react';
-import { IncomeEntity } from '../src/models/entities/IncomeEntity';
 import { ExpenseEntity } from '../src/models/entities/ExpenseEntity';
 import HeaderCards from './HomeScreen/components/HeaderCards';
 import IncomeSection from './HomeScreen/components/IncomeSection';
 import AccountsSection from './HomeScreen/components/AccountsSection';
 import ExpensesSection from './HomeScreen/components/ExpensesSection';
-import { getAllIncomesAsync } from '../src/db/Repositories/IncomeRepository';
 import { useFocusEffect } from 'expo-router';
 import { AccountListData } from '../src/models/data/AccountListData';
 import { getAccountsListAsync } from '../src/services/AccountService';
 import { currencyMap } from '../src/models/constants/CurrencyList';
 import { Currency } from '../src/models/enums/Currency';
 import { getDefaultCurrencySetting } from '../src/services/async-storage/AsyncStorageService';
+import { IncomeSourceData } from '../src/models/data/IncomeSourceData';
+import { getIncomesAsync } from '../src/services/IncomeService';
 
 export default function HomeScreen() {
   const [defaultCurrencySymbol, setDefaultCurrencySymbol] = useState<string>(currencyMap.get(Currency.UAH) || '');
-  const [incomes, setIncomes] = useState<IncomeEntity[]>([]);
+  const [incomes, setIncomes] = useState<IncomeSourceData[]>([]);
   const [accountsList, setAccountsList] = useState<AccountListData>({
     accounts: [],
     totalBalance: 0
@@ -28,8 +28,8 @@ export default function HomeScreen() {
   const totalExpenses = expenses.reduce((sum, item) => sum + item.balance, 0);
   const totalPlanned = expenses.reduce((sum, item) => sum + (item.limit || 0), 0);
 
-  const fetchIncomes = useCallback(async (): Promise<IncomeEntity[]> => {
-    return await getAllIncomesAsync();
+  const fetchIncomes = useCallback(async (): Promise<IncomeSourceData[]> => {
+    return await getIncomesAsync();
   }, []);
   
   const fetchAccounts = useCallback(async (): Promise<AccountListData> => {

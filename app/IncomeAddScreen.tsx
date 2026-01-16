@@ -6,14 +6,20 @@ import SubmitButton from "./components/SubmitButton";
 import { useRouter } from "expo-router";
 import DropdownList from "./components/DropdownList";
 import { currencyDropdownData } from "../src/models/constants/CurrencyList";
-import { insertIncomeAsync } from "../src/db/Repositories/IncomeRepository";
 import { IncomeFormErrors } from "./IncomeFormScreens/models/Errors";
+import { validateIncomeSourceData } from "../src/services/IncomeValidationService";
+import { IncomeSourceData } from "../src/models/data/IncomeSourceData";
+import { addIncomeAsync } from "../src/services/IncomeService";
 
 export default function IncomeAddScreen() {
     const router = useRouter();
-    const [incomeTypeName, setIncomeTypeName] = useState("");
-    const [balance, setBalance] = useState("0");
-    const [currency, setCurrency] = useState(0);
+    const [incomeSourceData, setIncomeSourceData] = useState<IncomeSourceData>(
+        { 
+            id: 0, 
+            name: "", 
+            balance: 0, 
+            currency: 0 
+        } as IncomeSourceData);
     const [errors, setErrors] = useState<IncomeFormErrors>({});
     
     async function handleSubmit() {
@@ -22,34 +28,27 @@ export default function IncomeAddScreen() {
         {
             return;
         }
-        const name = incomeTypeName.trim();
-        const parsedBalance = parseFloat(balance || "0") || 0;
 
-        try {
-            await insertIncomeAsync({ name, balance: parsedBalance, currency });
-        } catch (err) {
-            console.error('Failed to insert income', err);
-        }
+        await addIncomeAsync(incomeSourceData);
 
         router.back();
     }
 
     function validate() : boolean {
-        const name = incomeTypeName.trim();
-        let isValid = true;
-        if (!name)
-        {
-            setErrors((prev) => ({ ...prev, nameErrorMessage: "Name is required" }));
-            isValid = false;
+        const validationResult = validateIncomeSourceData(incomeSourceData);
+        if (validationResult.isValid) {
+            return true;
+        }
+        
+        if (validationResult.nameErrorMessage) {
+            setErrors((prev) => ({ ...prev, nameErrorMessage: validationResult.nameErrorMessage }));
         }
 
-        if (Number.isNaN(parseFloat(balance))) 
-        {
-            setErrors((prev) => ({ ...prev, balanceErrorMessage: "Balance must be a number" }));
-            isValid = false;
+        if (validationResult.balanceErrorMessage) {
+            setErrors((prev) => ({ ...prev, balanceErrorMessage: validationResult.balanceErrorMessage }));
         }
 
-        return isValid;
+        return false;
     }
 
     return (
@@ -60,19 +59,19 @@ export default function IncomeAddScreen() {
                     <TextInputField 
                         label="Income type name"
                         placeholder="Enter name" 
-                        value={incomeTypeName}
-                        onChangeText={setIncomeTypeName}
+                        value={incomeSourceData.name}
+                        onChangeText={(text) => setIncomeSourceData({ ...incomeSourceData, name: text })}
                         errorMessage={errors.nameErrorMessage}/>
                     <TextInputField 
                         label="Balance" 
                         placeholder="0"
-                        value={balance}
-                        onChangeText={setBalance}
+                        value={incomeSourceData.balance.toString()}
+                        onChangeText={(text) => setIncomeSourceData({ ...incomeSourceData, balance: parseFloat(text) || 0 })}
                         errorMessage={errors.balanceErrorMessage}/>
                     <DropdownList
                         data={currencyDropdownData}
                         defaultOption={currencyDropdownData[0]}
-                        setSelected={(key) => setCurrency(key)}
+                        setSelected={(key) => setIncomeSourceData((prev) => ({ ...prev, currency: key }))}
                         placeholder="Select currency"
                         label="Choose currency"/>
                 </View>
