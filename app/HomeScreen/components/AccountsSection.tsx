@@ -5,7 +5,7 @@ import { AccountData } from '../../../src/models/data/AccountData';
 import Modal from '../../components/Modal';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { deleteAccountAsync } from '../../../src/db/Repositories/AccountRepositiory';
+import { deleteAccountAsync } from '../../../src/services/AccountService';
 
 interface AccountsSectionProps {
   accounts: AccountData[];
@@ -37,18 +37,14 @@ export default function AccountsSection({ accounts, onRefresh }: AccountsSection
   }
 
   async function handleDeleteAccount() {
-    try {
-      if (!pressedAccount){
-        return;
-      }
+    if (!pressedAccount){
+      return;
+    }
 
-      await deleteAccountAsync(pressedAccount.id);
-      if (onRefresh) await onRefresh();
-      setDeleteAccountModalOpen(false);
-    }
-    catch(err) {
-      console.error('Failed to delete account', err)
-    }
+    await deleteAccountAsync(pressedAccount.id);
+
+    if (onRefresh) await onRefresh();
+    setDeleteAccountModalOpen(false);
   }
 
   return (

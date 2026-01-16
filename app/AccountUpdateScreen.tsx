@@ -1,54 +1,38 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { getAccountByIdAsync, insertAccountAsync, updateAccountAsync } from "../src/db/Repositories/AccountRepositiory";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import HeaderForEditScreens from "./components/HeaderForEditScreens";
 import TextInputField from "./components/TextInputField";
 import SubmitButton from "./components/SubmitButton";
 import { AccountFormErrors } from "./AccountFormScreens/Errors";
-import { AccountUpdateEntity } from "../src/models/entities/AccountUpdateEntity";
 import Toggle from "./components/Toggle";
+import { getAccountAsync, updateAccountAsync } from "../src/services/AccountService";
+import AccountUpdateData from "../src/models/data/AccountUpdateData";
+import { mapAccountDataToAccountUpdateEntity } from "../src/services/MapService";
+import { validateAccountUpdateData } from "../src/services/AccountValidationService";
 
 
 export default function AccountUpdateScreen() {
     const router = useRouter();
     const accountIdParam = useLocalSearchParams().accountId as string | undefined;
-    const [accountToUpdate, setAccountToUpdate] = useState<AccountUpdateEntity>({
+    const [accountToUpdate, setAccountToUpdate] = useState<AccountUpdateData>({
         id: 0,
         name: "",
         balance: 0,
         includeToTotalBalance: true,
-    } as AccountUpdateEntity);
+    } as AccountUpdateData);
     const [errors, setErrors] = useState<AccountFormErrors>({});
 
     useEffect(() => {
 
         if (accountIdParam === undefined || Number.isNaN(accountIdParam)) {
-            console.error('IncomeId is missing or invalid in route params');
-            return;
+            throw new Error('IncomeId is missing or invalid in route params');
         }
         var accountId = parseInt(accountIdParam);
         
         (async () => {
-            try {
-                var account = await getAccountByIdAsync(accountId);
-                if (!account)
-                {
-                    console.error(`Account with id ${accountId} was not found`);
-                    return;
-                }
-                var mappedAccount = {
-                    id: account.id,
-                    name: account.name,
-                    balance: account.balance,
-                    includeToTotalBalance: account.includeToTotalBalance
-                } as AccountUpdateEntity;
-                setAccountToUpdate(mappedAccount);
-            }
-            catch {
-                console.error('Error when retrieving account');
-                return;
-            }
+            var account = await getAccountAsync(accountId); 
+            setAccountToUpdate(mapAccountDataToAccountUpdateEntity(account)); 
         })();
     }, [accountIdParam]);
 
@@ -59,32 +43,26 @@ export default function AccountUpdateScreen() {
             return;
         }
         
-        try {
-            await updateAccountAsync(accountToUpdate!);
-        }
-        catch (err) {
-            console.error('Failed to update account', err);
-        }
+        await updateAccountAsync(accountToUpdate); 
 
         router.back();
     }
 
     function validate() : boolean {
-        const name = accountToUpdate.name.trim();
-        let isValid = true;
-        if (!name)
-        {
-            setErrors((prev) => ({ ...prev, nameErrorMessage: "Name is required" }));
-            isValid = false;
+        const validationResult = validateAccountUpdateData(accountToUpdate);
+        if (validationResult.isValid) {
+            return true;
         }
 
-        if (Number.isNaN(accountToUpdate.balance)) 
-        {
-            setErrors((prev) => ({ ...prev, balanceErrorMessage: "Balance must be a number" }));
-            isValid = false;
+        if (validationResult.nameErrorMessage) {
+            setErrors((prev) => ({ ...prev, nameErrorMessage: validationResult.nameErrorMessage }));
         }
 
-        return isValid;
+        if (validationResult.balanceErrorMessage) {
+            setErrors((prev) => ({ ...prev, balanceErrorMessage: validationResult.balanceErrorMessage }));
+        }
+
+        return false;
     }
 
     return (

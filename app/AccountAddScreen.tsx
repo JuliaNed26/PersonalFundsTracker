@@ -1,8 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { AccountEntity } from "../src/models/entities/AccountEntity";
-import { insertAccountAsync } from "../src/db/Repositories/AccountRepositiory";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import HeaderForEditScreens from "./components/HeaderForEditScreens";
 import TextInputField from "./components/TextInputField";
 import DropdownList from "./components/DropdownList";
@@ -10,16 +9,19 @@ import { currencyDropdownData } from "../src/models/constants/CurrencyList";
 import SubmitButton from "./components/SubmitButton";
 import { AccountFormErrors } from "./AccountFormScreens/Errors";
 import Toggle from "./components/Toggle";
+import { addAccountAsync } from "../src/services/AccountService";
+import { AccountData } from "../src/models/data/AccountData";
+import { validateAccountData } from "../src/services/AccountValidationService";
 
 export default function AccountAddScreen() {
     const router = useRouter();
-    const [accountToAdd, setAccountToAdd] = useState<AccountEntity>({
+    const [accountToAdd, setAccountToAdd] = useState<AccountData>({
         id: 0,
         name: "",
         currency: 0,
         balance: 0,
         includeToTotalBalance: true,
-    } as AccountEntity);
+    } as AccountData);
     const [errors, setErrors] = useState<AccountFormErrors>({});
 
     async function handleSubmit() {
@@ -28,33 +30,27 @@ export default function AccountAddScreen() {
         {
             return;
         }
-        
-        try {
-            await insertAccountAsync(accountToAdd);
-        }
-        catch (err) {
-            console.error('Failed to insert account', err);
-        }
 
+        await addAccountAsync(accountToAdd); 
+        
         router.back();
     }
 
     function validate() : boolean {
-        const name = accountToAdd.name.trim();
-        let isValid = true;
-        if (!name)
-        {
-            setErrors((prev) => ({ ...prev, nameErrorMessage: "Name is required" }));
-            isValid = false;
+        const validationResult = validateAccountData(accountToAdd);
+        if (validationResult.isValid) {
+            return true;
         }
 
-        if (Number.isNaN(accountToAdd.balance)) 
-        {
-            setErrors((prev) => ({ ...prev, balanceErrorMessage: "Balance must be a number" }));
-            isValid = false;
+        if (validationResult.nameErrorMessage) {
+            setErrors((prev) => ({ ...prev, nameErrorMessage: validationResult.nameErrorMessage }));
         }
 
-        return isValid;
+        if (validationResult.balanceErrorMessage) {
+            setErrors((prev) => ({ ...prev, balanceErrorMessage: validationResult.balanceErrorMessage }));
+        }
+
+        return false;
     }
 
     return (

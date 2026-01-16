@@ -1,7 +1,6 @@
 import { View, ScrollView, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
 import { StyleSheet } from 'react-native';
 import { useState, useCallback } from 'react';
-import { AccountEntity } from '../src/models/entities/AccountEntity';
 import { IncomeEntity } from '../src/models/entities/IncomeEntity';
 import { ExpenseEntity } from '../src/models/entities/ExpenseEntity';
 import HeaderCards from './HomeScreen/components/HeaderCards';
@@ -10,9 +9,8 @@ import AccountsSection from './HomeScreen/components/AccountsSection';
 import ExpensesSection from './HomeScreen/components/ExpensesSection';
 import { getAllIncomesAsync } from '../src/db/Repositories/IncomeRepository';
 import { useFocusEffect } from 'expo-router';
-import { getAllAccountsAsync } from '../src/db/Repositories/AccountRepositiory';
 import { AccountListData } from '../src/models/data/AccountListData';
-import { getAccountsList as getAccountsListAsync } from '../src/services/AccountService';
+import { getAccountsListAsync } from '../src/services/AccountService';
 import { currencyMap } from '../src/models/constants/CurrencyList';
 import { Currency } from '../src/models/enums/Currency';
 import { getDefaultCurrencySetting } from '../src/services/async-storage/AsyncStorageService';
