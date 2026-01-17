@@ -9,6 +9,8 @@ export default function RootLayout() {
             <Stack.Screen name="IncomeUpdateScreen" options={{ headerShown: false }} />
             <Stack.Screen name="AccountAddScreen" options={{ headerShown: false }} />
             <Stack.Screen name="AccountUpdateScreen" options={{ headerShown: false }} />
+            <Stack.Screen name="ExpenseTypeAddScreen" options={{ headerShown: false }} />
+            <Stack.Screen name="ExpenseTypeUpdateScreen" options={{ headerShown: false }} />
         </Stack>
     )
 }
