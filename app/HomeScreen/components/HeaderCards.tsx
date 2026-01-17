@@ -5,9 +5,10 @@ interface HeaderCardsProps {
   balance: number;
   expenses: number;
   planned: number;
+  defaultCurrencySymbol: string;
 }
 
-export default function HeaderCards({ balance, expenses, planned }: HeaderCardsProps) {
+export default function HeaderCards({ balance, expenses, planned, defaultCurrencySymbol }: HeaderCardsProps) {
   const cards = [
     { key: 'balance', label: 'Balance', value: balance },
     { key: 'expenses', label: 'Expenses', value: expenses },
@@ -26,7 +27,7 @@ export default function HeaderCards({ balance, expenses, planned }: HeaderCardsP
             colors={['#B4C15F', '#7F8943']}
             style={[styles.card, i !== cards.length - 1 && styles.cardSpacing]}>
             <Text style={styles.cardLabel}>{c.label}</Text>
-            <Text style={styles.cardValue}>{`${format(c.value)} UAN`}</Text>
+            <Text style={styles.cardValue}>{`${format(c.value)} ${defaultCurrencySymbol}`}</Text>
           </LinearGradient>
         ))}
       </View>

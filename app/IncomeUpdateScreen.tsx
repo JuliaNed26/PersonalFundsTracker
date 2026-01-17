@@ -4,16 +4,23 @@ import HeaderForEditScreens from "./components/HeaderForEditScreens";
 import { useEffect, useState } from "react";
 import SubmitButton from "./components/SubmitButton";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { getIncomeByIdAsync, updateIncomeAsync } from "../src/db/IncomeRepository";
 import { IncomeFormErrors } from "./IncomeFormScreens/models/Errors";
-import { IncomeEntity } from "../src/models/entities/IncomeEntity";
+import { IncomeSourceData } from "../src/models/data/IncomeSourceData";
+import { getIncomeAsync, updateIncomeAsync } from "../src/services/IncomeService";
+import { validateIncomeSourceData } from "../src/services/IncomeValidationService";
 
 export default function IncomeUpdateScreen() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const incomeIdParam = params.incomeId as string | undefined;
     const incomeId = incomeIdParam ? parseInt(incomeIdParam, 10) : undefined;
-    const [incomeEntity, setIncomeEntity] = useState<IncomeEntity>({ id: incomeId ?? 0, name: "", balance: 0, currency: 0 });
+    const [incomeSourceData, setIncomeSourceData] = useState<IncomeSourceData>(
+        { 
+            id: incomeId ?? 0, 
+            name: "", 
+            balance: 0, 
+            currency: 0 
+        } as IncomeSourceData);
     const [errors, setErrors] = useState<IncomeFormErrors>({});
     
     async function handleSubmit() {
@@ -22,34 +29,27 @@ export default function IncomeUpdateScreen() {
         {
             return;
         }
-        const name = incomeEntity?.name.trim();
-        if (!name) return;
 
-        try {
-            await updateIncomeAsync(incomeEntity!);
-        } catch (err) {
-            console.error('Failed to update income', err);
-        }
+        await updateIncomeAsync(incomeSourceData);
 
         router.back();
     }
 
     function validate() : boolean {
-        const name = incomeEntity?.name.trim();
-        let isValid = true;
-        if (!name)
-        {
-            setErrors((prev) => ({ ...prev, nameErrorMessage: "Name is required" }));
-            isValid = false;
+        const validationResult = validateIncomeSourceData(incomeSourceData);
+        if (validationResult.isValid) {
+            return true;
+        }
+        
+        if (validationResult.nameErrorMessage) {
+            setErrors((prev) => ({ ...prev, nameErrorMessage: validationResult.nameErrorMessage }));
         }
 
-        if (Number.isNaN(incomeEntity?.balance)) 
-        {
-            setErrors((prev) => ({ ...prev, balanceErrorMessage: "Balance must be a number" }));
-            isValid = false;
+        if (validationResult.balanceErrorMessage) {
+            setErrors((prev) => ({ ...prev, balanceErrorMessage: validationResult.balanceErrorMessage }));
         }
 
-        return isValid;
+        return false;
     }
 
     useEffect(() => {
@@ -59,16 +59,8 @@ export default function IncomeUpdateScreen() {
         }
 
         (async () => {
-            try {
-                const income = await getIncomeByIdAsync(incomeId);
-                if (!income) {
-                    console.error('Income not found');
-                    return;
-                }
-                setIncomeEntity(income);
-            } catch (err) {
-                console.error('Failed to load income', err);
-            }
+            const income = await getIncomeAsync(incomeId);
+            setIncomeSourceData(income);
         })();
     }, [incomeId]);
 
@@ -80,14 +72,14 @@ export default function IncomeUpdateScreen() {
                     <TextInputField 
                         label="Income type name"
                         placeholder="Enter name" 
-                        value={incomeEntity.name}
-                        onChangeText={(text) => setIncomeEntity({ ...incomeEntity, name: text })}
+                        value={incomeSourceData.name}
+                        onChangeText={(text) => setIncomeSourceData({ ...incomeSourceData, name: text })}
                         errorMessage={errors.nameErrorMessage}/>
                     <TextInputField 
                         label="Balance" 
                         placeholder="0"
-                        value={incomeEntity.balance.toString()}
-                        onChangeText={(text) => setIncomeEntity({ ...incomeEntity, balance: parseFloat(text) || 0 })}
+                        value={incomeSourceData.balance.toString()}
+                        onChangeText={(text) => setIncomeSourceData({ ...incomeSourceData, balance: parseFloat(text) || 0 })}
                         errorMessage={errors.balanceErrorMessage}/>
                 </View>
                 <View style={styles.submitButton}>

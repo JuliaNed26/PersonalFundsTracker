@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import CircleItem from './CircleItem';
 import AddButton from './AddButton';
-import { ExpensesData } from '../../../src/types/ExpensesData';
+import { ExpensesData } from '../../../src/models/data/ExpensesData';
 
 interface ExpensesSectionProps {
   expenses: ExpensesData[];

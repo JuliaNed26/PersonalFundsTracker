@@ -1,31 +1,44 @@
 import { View, ScrollView, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
 import { StyleSheet } from 'react-native';
 import { useState, useCallback } from 'react';
-import { AccountEntity } from '../src/models/entities/AccountEntity';
-import { IncomeEntity } from '../src/models/entities/IncomeEntity';
 import { ExpenseEntity } from '../src/models/entities/ExpenseEntity';
 import HeaderCards from './HomeScreen/components/HeaderCards';
 import IncomeSection from './HomeScreen/components/IncomeSection';
 import AccountsSection from './HomeScreen/components/AccountsSection';
 import ExpensesSection from './HomeScreen/components/ExpensesSection';
-import { getAllIncomesAsync } from '../src/db/IncomeRepository';
 import { useFocusEffect } from 'expo-router';
+import { AccountListData } from '../src/models/data/AccountListData';
+import { getAccountsListAsync } from '../src/services/AccountService';
+import { currencyMap } from '../src/models/constants/CurrencyList';
+import { Currency } from '../src/models/enums/Currency';
+import { getDefaultCurrencySetting } from '../src/services/async-storage/AsyncStorageService';
+import { IncomeSourceData } from '../src/models/data/IncomeSourceData';
+import { getIncomesAsync } from '../src/services/IncomeService';
 
 export default function HomeScreen() {
-  const [incomes, setIncomes] = useState<IncomeEntity[]>([]);
+  const [defaultCurrencySymbol, setDefaultCurrencySymbol] = useState<string>(currencyMap.get(Currency.UAH) || '');
+  const [incomes, setIncomes] = useState<IncomeSourceData[]>([]);
+  const [accountsList, setAccountsList] = useState<AccountListData>({
+    accounts: [],
+    totalBalance: 0
+  });
 
-  const accounts: AccountEntity[] = [];
   const expenses: ExpenseEntity[] = [];
 
-  const totalAccounts = accounts.reduce(
-    (sum, item) => (item.includeToTotalBalance ? sum + item.balance : sum),
-    0,
-  );
   const totalExpenses = expenses.reduce((sum, item) => sum + item.balance, 0);
   const totalPlanned = expenses.reduce((sum, item) => sum + (item.limit || 0), 0);
 
-  const fetchIncomes = useCallback(async (): Promise<IncomeEntity[]> => {
-    return await getAllIncomesAsync();
+  const fetchIncomes = useCallback(async (): Promise<IncomeSourceData[]> => {
+    return await getIncomesAsync();
+  }, []);
+  
+  const fetchAccounts = useCallback(async (): Promise<AccountListData> => {
+    return await getAccountsListAsync();
+  }, []);
+
+  const getDefaultCurrencySymbol = useCallback(async (): Promise<string> => {
+    var defaultCurrency = await getDefaultCurrencySetting();
+    return currencyMap.get(defaultCurrency) || '';
   }, []);
 
   useFocusEffect(
@@ -34,8 +47,14 @@ export default function HomeScreen() {
 
       (async () => {
         try {
-          const list = await fetchIncomes();
-          if (isActive) setIncomes(list);
+          const incomesList = await fetchIncomes();
+          const accountsList = await fetchAccounts();
+          const defafaultCurrencySymbol = await getDefaultCurrencySymbol();
+          if (isActive) {
+            setIncomes(incomesList);
+            setAccountsList(accountsList);
+            setDefaultCurrencySymbol(defafaultCurrencySymbol);
+          }
         } catch (err) {
           console.error('Failed to load incomes', err);
         }
@@ -44,15 +63,17 @@ export default function HomeScreen() {
       return () => {
         isActive = false;
       };
-    }, [fetchIncomes]),
+    }, [fetchIncomes, fetchAccounts]),
   );
 
   async function handleOnRefresh()
   {
     try 
     { 
-      const list = await fetchIncomes(); 
-      setIncomes(list); 
+      const incomesList = await fetchIncomes();
+      const accountsList = await fetchAccounts();
+      setIncomes(incomesList);
+      setAccountsList(accountsList);
     } 
     catch (err) 
     { 
@@ -65,12 +86,16 @@ export default function HomeScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#FCD34D" />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <HeaderCards balance={totalAccounts} expenses={totalExpenses} planned={totalPlanned} />
+          <HeaderCards 
+            balance={accountsList.totalBalance} 
+            expenses={totalExpenses} 
+            planned={totalPlanned} 
+            defaultCurrencySymbol={defaultCurrencySymbol} />
         </View>
 
         <View style={styles.contentContainer}>
           <IncomeSection incomes={incomes} onRefresh={handleOnRefresh} />
-          <AccountsSection accounts={accounts} />
+          <AccountsSection accounts={accountsList.accounts} onRefresh={handleOnRefresh}/>
           <ExpensesSection expenses={expenses} />
         </View>
       </ScrollView>

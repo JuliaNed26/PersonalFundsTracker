@@ -1,9 +1,9 @@
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import CircleItem from './CircleItem';
 import AddButton from './AddButton';
-import { IncomeSourceData } from '../../../src/types/IncomeSourceData';
+import { IncomeSourceData } from '../../../src/models/data/IncomeSourceData';
 import { useState } from 'react';
-import { deleteIncomeByIdAsync } from '../../../src/db/IncomeRepository';
+import { deleteIncomeByIdAsync } from '../../../src/db/Repositories/IncomeRepository';
 import Modal from '../../components/Modal';
 import { useRouter } from 'expo-router';
 

@@ -1,7 +1,7 @@
-import { db } from './index';
-import { incomes } from './schema';
-import type { Income } from './schema';
-import type { IncomeEntity } from '../models/entities/IncomeEntity';
+import { db } from '../index';
+import { incomes } from '../schema';
+import type { Income } from '../schema';
+import type { IncomeEntity } from '../../models/entities/IncomeEntity';
 import { eq } from 'drizzle-orm';
 
 export async function getAllIncomesAsync(): Promise<IncomeEntity[]> {
@@ -22,10 +22,6 @@ export async function getIncomeByIdAsync(id: number): Promise<IncomeEntity | nul
       where: eq(incomes.id, id),
     })
   ) as Income;
-
-  if (!income) {
-    return null;
-  }
 
   return !income 
     ? null 

@@ -15,6 +15,20 @@
       "when": 1765648098914,
       "tag": "0001_quick_sebastian_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1767430462637,
+      "tag": "0002_fresh_sunspot",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1768037813195,
+      "tag": "0003_added_exchange_rates_table",
+      "breakpoints": true
     }
   ]
 }
