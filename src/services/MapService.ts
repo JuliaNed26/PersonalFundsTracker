@@ -2,10 +2,12 @@ import { AccountData } from "../models/data/AccountData";
 import AccountUpdateData from "../models/data/AccountUpdateData";
 import ExpenseTypeData from "../models/data/ExpenseTypeData";
 import { IncomeSourceData } from "../models/data/IncomeSourceData";
+import IncomeTransactionData from "../models/data/IncomeTransactionData";
 import { AccountEntity } from "../models/entities/AccountEntity";
 import { AccountUpdateEntity } from "../models/entities/AccountUpdateEntity";
 import { ExpenseTypeEntity } from "../models/entities/ExpenseTypeEntity";
-import { IncomeEntity } from "../models/entities/IncomeEntity";
+import { IncomeSourceEntity } from "../models/entities/IncomeEntity";
+import IncomeTransactionEntity from "../models/entities/IncomeTransactionEntity";
 
 export function mapAccountEntityToAccountData(account: AccountEntity) : AccountData
 {
@@ -49,24 +51,24 @@ export function mapAccountUpdateDataToAccountUpdateEntity(account: AccountUpdate
     } as AccountUpdateEntity;
 }
 
-export function mapIncomeEntityToIncomeSourceData(income: IncomeEntity) : IncomeSourceData
+export function mapIncomeEntityToIncomeSourceData(income: IncomeSourceEntity) : IncomeSourceData
 {
     return {
         id: income.id,
         name: income.name,
-        balance: income.balance,
+        transactions: income.transactions.map(mapIncomeTransactionEntityToIncomeTransactionData),
         currency: income.currency
     } as IncomeSourceData;
 }
 
-export function mapIncomeSourceDataToIncomeEntity(income: IncomeSourceData) : IncomeEntity
+export function mapIncomeSourceDataToIncomeEntity(income: IncomeSourceData) : IncomeSourceEntity
 {
     return {
         id: income.id,
         name: income.name,
-        balance: income.balance,
+        transactions: income.transactions.map(mapIncomeTransactionDataToIncomeTransactionEntity),
         currency: income.currency
-    } as IncomeEntity;
+    } as IncomeSourceEntity;
 }
 
 export function mapExpenseTypeEntityToExpenseTypeData(expenseType: ExpenseTypeEntity) : ExpenseTypeData
@@ -86,4 +88,26 @@ export function mapExpenseTypeDataToExpenseTypeEntity(expenseType: ExpenseTypeDa
         name: expenseType.name,
         limit: expenseType.limit
     } as ExpenseTypeEntity;
+}
+
+export function mapIncomeTransactionEntityToIncomeTransactionData(transaction: IncomeTransactionEntity) : IncomeTransactionData
+{
+    return {
+        incomeId: transaction.incomeId,
+        accountId: transaction.accountId,
+        sum: transaction.sum,
+        date: transaction.date,
+        note: transaction.note
+    } as IncomeTransactionData;
+}
+
+export function mapIncomeTransactionDataToIncomeTransactionEntity(transaction: IncomeTransactionData) : IncomeTransactionEntity
+{
+    return {
+        incomeId: transaction.incomeId,
+        accountId: transaction.accountId,
+        sum: transaction.sum,
+        date: transaction.date,
+        note: transaction.note
+    } as IncomeTransactionEntity;
 }

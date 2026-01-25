@@ -1,10 +1,10 @@
+import { relations } from 'drizzle-orm';
 import { sqliteTable, text, integer, real, SQLiteBoolean, primaryKey } from 'drizzle-orm/sqlite-core';
 
 export const incomes = sqliteTable('incomes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull().unique(),
-  currency: integer('currency').notNull(),
-  balance: real('balance').notNull().default(0),
+  currency: integer('currency').notNull()
 });
 
 export const accounts = sqliteTable('accounts', {
@@ -30,6 +30,7 @@ export const incomeTransactions = sqliteTable('incomeTransactions', {
     .references(() => incomes.id),
   sum: real('sum').notNull(),
   date: text('date').notNull(),
+  note: text('note')
 });
 
 export const accountTransactions = sqliteTable('accountTransactions', {
@@ -67,6 +68,28 @@ export const exchangeRates = sqliteTable(
     pk: primaryKey({ columns: [table.base, table.quote] })
   })
 );
+
+export const incomesRelations = relations(incomes, ({ many }) => ({
+  transactions: many(incomeTransactions)
+}));
+
+export const incomeTransactionsRelations = relations(incomeTransactions, ({ one }) => ({
+  income: one(incomes, {
+    fields: [incomeTransactions.incomeId],
+    references: [incomes.id]
+  })
+}));
+
+export const accountsRelations = relations(accounts, ({ many }) => ({
+  incomeTransactions: many(incomeTransactions)
+}));
+
+export const accountTransactionsRelations = relations(accountTransactions, ({ one }) => ({
+  account: one(accounts, {
+    fields: [accountTransactions.sourceAccountId],
+    references: [accounts.id]
+  })
+}));
 
 export type Income = typeof incomes.$inferSelect;
 export type Account = typeof accounts.$inferSelect;

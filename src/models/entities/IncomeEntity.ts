@@ -1,6 +1,8 @@
-export interface IncomeEntity {
+import IncomeTransactionEntity from "./IncomeTransactionEntity";
+
+export interface IncomeSourceEntity {
   id: number;
   name: string;
-  balance: number;
   currency: number;
+  transactions: IncomeTransactionEntity[];
 }

@@ -1,7 +1,6 @@
 import { View, ScrollView, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
 import { StyleSheet } from 'react-native';
 import { useState, useCallback } from 'react';
-import { ExpenseTypeEntity } from '../src/models/entities/ExpenseTypeEntity';
 import HeaderCards from './HomeScreen/components/HeaderCards';
 import IncomeSection from './HomeScreen/components/IncomeSection';
 import AccountsSection from './HomeScreen/components/AccountsSection';
@@ -16,6 +15,9 @@ import { IncomeSourceData } from '../src/models/data/IncomeSourceData';
 import { getIncomesAsync } from '../src/services/IncomeService';
 import ExpenseTypeData from '../src/models/data/ExpenseTypeData';
 import { getAllExpensesForCurrentMonthAsync } from '../src/services/ExpenseTypesService';
+import { AccountData } from '../src/models/data/AccountData';
+import TransactionsModal from './components/TransactionsModal';
+import { addIncomeTransactionAsync } from '../src/services/IncomeTransactionService';
 
 export default function HomeScreen() {
   const [defaultCurrencySymbol, setDefaultCurrencySymbol] = useState<string>(currencyMap.get(Currency.UAH) || '');
@@ -25,6 +27,11 @@ export default function HomeScreen() {
     totalBalance: 0
   });
   const [expenseTypes, setExpenseTypes] = useState<ExpenseTypeData[]>([]);
+
+  const [selectedIncome, setSelectedIncome] = useState<IncomeSourceData | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<AccountData | null>(null);
+  const [selectedExpenseType, setSelectedExpenseType] = useState<ExpenseTypeData | null>(null);
+  const [incomeToAccountModalVisible, setIncomeToAccountModalVisible] = useState<boolean>(false);
 
   // ToDo: implement total planned calculation
   const totalExpenses = expenseTypes.reduce((sum, item) => sum + item.balance, 0);
@@ -47,26 +54,79 @@ export default function HomeScreen() {
     return currencyMap.get(defaultCurrency) || '';
   }, []);
 
+  async function submitIncomeTransaction(sum: string) {
+    if (!selectedIncome || !selectedAccount || !sum) {
+      return;
+    }
+
+    try {
+      const transactionSum = parseFloat(sum);
+      
+      // Add the income transaction (which also updates account balance)
+      await addIncomeTransactionAsync({
+        incomeId: selectedIncome.id,
+        accountId: selectedAccount.id,
+        sum: transactionSum,
+        date: new Date().toISOString().split('T')[0],
+        note: ''
+      }, selectedAccount.balance);
+
+      setIncomeToAccountModalVisible(false);
+      setSelectedAccount(null);
+      setSelectedIncome(null);
+      await handleOnRefresh();
+    } catch (err) {
+      console.error('Failed to add income transaction', err);
+    }
+  }
+
+  function onIncomePress(pressedIncome: IncomeSourceData | null){ 
+    setSelectedIncome(pressedIncome);
+
+    if (selectedExpenseType)
+    {
+      setSelectedExpenseType(null);
+    }
+
+    if (selectedAccount)
+    {
+      setSelectedAccount(null);
+    }
+  }
+
+  function onAccountPress(pressedAccount: AccountData | null){
+    setSelectedAccount(pressedAccount);
+
+    if (pressedAccount)
+    {
+      if (selectedIncome)
+      {
+        setIncomeToAccountModalVisible(true);
+      }
+
+      if (selectedExpenseType)
+      {
+        setSelectedExpenseType(null);
+      }
+    }
+  }
+
+  function onExpenseTypePress(pressedExpenseType: ExpenseTypeData){
+    if ((selectedExpenseType && selectedExpenseType.id === pressedExpenseType.id)
+        || selectedIncome || !selectedAccount)
+    {
+      setSelectedExpenseType(null);
+      return;
+    }
+
+    setSelectedExpenseType(pressedExpenseType);
+  }
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
 
-      (async () => {
-        try {
-          const incomesList = await fetchIncomes();
-          const accountsList = await fetchAccounts();
-          const expenseTypesList = await fetchExpenseTypes();
-          const defafaultCurrencySymbol = await getDefaultCurrencySymbol();
-          if (isActive) {
-            setIncomes(incomesList);
-            setAccountsList(accountsList);
-            setExpenseTypes(expenseTypesList);
-            setDefaultCurrencySymbol(defafaultCurrencySymbol);
-          }
-        } catch (err) {
-          console.error('Failed to load incomes', err);
-        }
-      })();
+      (async () => await handleOnRefresh())();
 
       return () => {
         isActive = false;
@@ -84,6 +144,10 @@ export default function HomeScreen() {
       setIncomes(incomesList);
       setAccountsList(accountsList);
       setExpenseTypes(expenseTypesList);
+      setSelectedAccount(null);
+      setSelectedExpenseType(null);
+      const currencySymbol = await getDefaultCurrencySymbol();
+      setDefaultCurrencySymbol(currencySymbol);
     } 
     catch (err) 
     { 
@@ -104,11 +168,22 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.contentContainer}>
-          <IncomeSection incomes={incomes} onRefresh={handleOnRefresh} />
-          <AccountsSection accounts={accountsList.accounts} onRefresh={handleOnRefresh}/>
+          <IncomeSection incomes={incomes} selectedIncome={selectedIncome} setSelectedIncome={onIncomePress} onRefresh={handleOnRefresh} />
+          <AccountsSection accounts={accountsList.accounts} selectedAccount={selectedAccount} setSelectedAccount={onAccountPress} onRefresh={handleOnRefresh}/>
           <ExpensesSection expenses={expenseTypes} onRefresh={handleOnRefresh}/>
         </View>
       </ScrollView>
+      <TransactionsModal
+        visible={incomeToAccountModalVisible}
+        setIsVisible={setIncomeToAccountModalVisible}
+        text={`Add transaction from ${selectedIncome?.name} to ${selectedAccount?.name}?`}
+        buttonText="Add Transaction >>>"
+        buttonAction={submitIncomeTransaction}
+        onClose={() => {
+          setSelectedAccount(null);
+          setSelectedIncome(null);
+          setSelectedExpenseType(null);
+        }}/>
     </View>
   );
 }
