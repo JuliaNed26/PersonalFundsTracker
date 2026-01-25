@@ -28,5 +28,11 @@ function validateIncomeBalance(balance: number, validationResult: IncomeValidati
         return false;
     }
 
+    if (balance < 0) {
+        validationResult.isValid = false;
+        validationResult.balanceErrorMessage = "Balance cannot be negative";
+        return false;
+    }
+
     return true;
 }

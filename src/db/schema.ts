@@ -15,9 +15,9 @@ export const accounts = sqliteTable('accounts', {
   includeToTotalBalance: integer('includeToTotalBalance', {mode: 'boolean'}).notNull().default(true),
 });
 
-export const expenses = sqliteTable('expenses', {
+export const expenses = sqliteTable('expenseTypes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  type: text('type').notNull().unique(),
+  name: text('name').notNull().unique(),
   limit: real('limit'),
 });
 

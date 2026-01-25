@@ -108,5 +108,5 @@ const styles = StyleSheet.create({
     submitButton: {
         width: "80%",
         marginTop: 100,
-    },
+    }
 });
