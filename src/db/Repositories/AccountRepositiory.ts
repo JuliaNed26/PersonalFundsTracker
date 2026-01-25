@@ -65,3 +65,12 @@ export async function updateAccountAsync(accountData: AccountUpdateEntity) : Pro
 export async function deleteAccountAsync(id: number) : Promise<void> {
   await db.delete(accounts).where(eq(accounts.id, id));
 }
+
+export async function updateAccountBalanceAsync(id: number, newBalance: number) : Promise<AccountEntity> {
+  const updated = await db.update(accounts).set({
+    balance: newBalance,
+  }).where(eq(accounts.id, id)).returning();
+
+  const row = Array.isArray(updated) ? updated[0] : updated;
+  return row as AccountEntity;
+}

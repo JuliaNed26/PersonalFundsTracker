@@ -1,6 +1,9 @@
+import IncomeTransactionData from "./IncomeTransactionData";
+
 export interface IncomeSourceData {
   id: number;
   name: string;
-  balance: number;
   currency: number;
+  transactions: IncomeTransactionData[];
+  balance?: number;
 }

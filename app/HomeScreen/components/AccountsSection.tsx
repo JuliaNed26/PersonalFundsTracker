@@ -3,20 +3,24 @@ import CircleItem from './CircleItem';
 import AddButton from './AddButton';
 import { AccountData } from '../../../src/models/data/AccountData';
 import Modal from '../../components/Modal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { deleteAccountAsync } from '../../../src/services/AccountService';
 
 interface AccountsSectionProps {
   accounts: AccountData[];
   onRefresh?: () => Promise<void> | void;
+  setSelectedAccount: (account: AccountData | null) => void;
+  selectedAccount: AccountData | null;
 }
 
-export default function AccountsSection({ accounts, onRefresh }: AccountsSectionProps) {
+export default function AccountsSection({ accounts, onRefresh, setSelectedAccount, selectedAccount }: AccountsSectionProps) {
   var router = useRouter();
   const [accountsModalOpen, setAccountsModalOpen] = useState<boolean>(false);
   const [deleteAccountModalOpen, setDeleteAccountModalOpen] = useState<boolean>(false);
   const [pressedAccount, setPressedAccount] = useState<AccountData | null>(null);
+
+  useEffect(() => {}, [selectedAccount]);
 
   async function handleOnLongPress(account : AccountData) {
     setAccountsModalOpen(true);
@@ -47,6 +51,17 @@ export default function AccountsSection({ accounts, onRefresh }: AccountsSection
     setDeleteAccountModalOpen(false);
   }
 
+  function handleAccountPress(account: AccountData) {
+    if (selectedAccount?.id === account.id)
+    {
+      setSelectedAccount(null);
+    }
+    else 
+    {
+      setSelectedAccount(account);
+    }
+  }
+
   return (
     <View>
       <View style={styles.header}>
@@ -62,7 +77,9 @@ export default function AccountsSection({ accounts, onRefresh }: AccountsSection
         {accounts.map((account) => (
           <Pressable
             key={account.id}
-            onLongPress={() => handleOnLongPress(account)}>
+            onLongPress={() => handleOnLongPress(account)}
+            onPress={() => handleAccountPress(account)}
+            style={selectedAccount?.id === account.id ? styles.highlightedItem : null}>
             <CircleItem
               name={account.name}
               balance={account.balance}
@@ -127,5 +144,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
+  },
+  highlightedItem: {
+    opacity: 0.6,
   },
 });

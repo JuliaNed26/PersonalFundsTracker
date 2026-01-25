@@ -2,25 +2,29 @@ import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import CircleItem from './CircleItem';
 import AddButton from './AddButton';
 import { IncomeSourceData } from '../../../src/models/data/IncomeSourceData';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { deleteIncomeByIdAsync } from '../../../src/db/Repositories/IncomeRepository';
 import Modal from '../../components/Modal';
 import { useRouter } from 'expo-router';
 
 interface IncomeSectionProps {
   incomes: IncomeSourceData[];
+  setSelectedIncome: (income: IncomeSourceData | null) => void;
   onRefresh?: () => Promise<void> | void;
+  selectedIncome: IncomeSourceData | null;
 }
 
-export default function IncomeSection({ incomes, onRefresh }: IncomeSectionProps) {
+export default function IncomeSection({ incomes, onRefresh, setSelectedIncome, selectedIncome }: IncomeSectionProps) {
   const router = useRouter();
   const [incomesModalOpen, setIncomesModalOpen] = useState(false);
   const [deleteIncomeModalOpen, setDeleteIncomeModalOpen] = useState(false);
-  const [pressedIncome, setPressedIncome] = useState<IncomeSourceData | null>(null);
+  const [incomeToEdit, setIncomeToEdit] = useState<IncomeSourceData | null>(null);
+
+  useEffect(() => {}, [selectedIncome]);
 
   async function handleOnLongPress(income: IncomeSourceData) {
     setIncomesModalOpen(true);
-    setPressedIncome(income);
+    setIncomeToEdit(income);
   }
 
   async function handleDeleteActionAccepted() {
@@ -29,11 +33,11 @@ export default function IncomeSection({ incomes, onRefresh }: IncomeSectionProps
   }
 
   async function handleDeleteIncome() {
-    if (pressedIncome)
+    if (incomeToEdit)
     {
       try 
       {
-        await deleteIncomeByIdAsync(pressedIncome.id);
+        await deleteIncomeByIdAsync(incomeToEdit.id);
         setDeleteIncomeModalOpen(false);
         if (onRefresh) await onRefresh();
       } 
@@ -48,8 +52,19 @@ export default function IncomeSection({ incomes, onRefresh }: IncomeSectionProps
     setIncomesModalOpen(false);
     router.push({
       pathname: '/IncomeUpdateScreen',
-      params: { incomeId: pressedIncome?.id }
+      params: { incomeId: incomeToEdit?.id }
     });
+  }
+
+  function handleIncomePress(income: IncomeSourceData) {
+    if (selectedIncome?.id === income.id)
+    {
+      setSelectedIncome(null);
+    }
+    else 
+    {
+      setSelectedIncome(income);
+    }
   }
 
   return (
@@ -67,7 +82,9 @@ export default function IncomeSection({ incomes, onRefresh }: IncomeSectionProps
         {incomes.map((income) => (
           <Pressable
             key={income.id}
-            onLongPress={() => handleOnLongPress(income)}>
+            onLongPress={() => handleOnLongPress(income)}
+            onPress={() => handleIncomePress(income)}
+            style={selectedIncome?.id === income.id ? styles.highlightedItem : null}>
             <CircleItem key={income.id} name={income.name} balance={income.balance} currency={income.currency} color="green" />
           </Pressable>
         ))}
@@ -79,7 +96,7 @@ export default function IncomeSection({ incomes, onRefresh }: IncomeSectionProps
       <Modal
         visible={incomesModalOpen}
         setIsVisible={setIncomesModalOpen} 
-        text={`What do you want to do with the income source ${pressedIncome?.name}?`} 
+        text={`What do you want to do with the income source ${incomeToEdit?.name}?`} 
         firstButtonText='Update'
         firstButtonAction={handleUpdateIncome}
         secondButtonText='Delete'
@@ -88,7 +105,7 @@ export default function IncomeSection({ incomes, onRefresh }: IncomeSectionProps
       <Modal
         visible={deleteIncomeModalOpen}
         setIsVisible={setDeleteIncomeModalOpen}
-        text={`Are you sure you want to delete income ${pressedIncome?.name}?`} 
+        text={`Are you sure you want to delete income ${incomeToEdit?.name}?`} 
         firstButtonText='Cancel'
         firstButtonAction={() => {setDeleteIncomeModalOpen(false)}}
         secondButtonText='Yes'
@@ -127,5 +144,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
+  },
+  highlightedItem: {
+    opacity: 0.6,
   },
 });
