@@ -96,6 +96,7 @@ export function mapIncomeTransactionEntityToIncomeTransactionData(transaction: I
         incomeId: transaction.incomeId,
         accountId: transaction.accountId,
         sum: transaction.sum,
+        currency: transaction.currency,
         date: transaction.date,
         note: transaction.note
     } as IncomeTransactionData;
@@ -107,6 +108,7 @@ export function mapIncomeTransactionDataToIncomeTransactionEntity(transaction: I
         incomeId: transaction.incomeId,
         accountId: transaction.accountId,
         sum: transaction.sum,
+        currency: transaction.currency,
         date: transaction.date,
         note: transaction.note
     } as IncomeTransactionEntity;

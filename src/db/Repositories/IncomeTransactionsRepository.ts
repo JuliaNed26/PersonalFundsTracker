@@ -7,6 +7,7 @@ export async function addIncomeTransaction(incomeTransaction: IncomeTransactionE
         incomeId: incomeTransaction.incomeId,
         accountId: incomeTransaction.accountId,
         sum: incomeTransaction.sum,
+        currency: incomeTransaction.currency,
         date: incomeTransaction.date,
         note: incomeTransaction.note
     }).returning();

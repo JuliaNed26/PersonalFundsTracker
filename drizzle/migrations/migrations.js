@@ -8,6 +8,7 @@ import m0003 from './0003_added_exchange_rates_table.sql';
 import m0004 from './0004_expenses_table_update.sql';
 import m0005 from './0005_add_note_to_income_transactions.sql';
 import m0006 from './0006_relations_between_income_transactions.sql';
+import m0007 from './0007_currencyAddedToTransaction.sql';
 
   export default {
     journal,
@@ -18,7 +19,8 @@ m0002,
 m0003,
 m0004,
 m0005,
-m0006
+m0006,
+m0007
     }
   }
   

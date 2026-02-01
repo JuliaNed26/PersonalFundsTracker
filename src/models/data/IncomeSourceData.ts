@@ -5,5 +5,5 @@ export interface IncomeSourceData {
   name: string;
   currency: number;
   transactions: IncomeTransactionData[];
-  balance?: number;
+  balance: number;
 }
