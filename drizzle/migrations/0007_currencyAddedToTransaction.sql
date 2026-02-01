@@ -1,0 +1,1 @@
+ALTER TABLE `incomeTransactions` ADD `currency` integer NOT NULL;

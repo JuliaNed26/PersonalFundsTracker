@@ -54,22 +54,23 @@ export default function HomeScreen() {
     return currencyMap.get(defaultCurrency) || '';
   }, []);
 
-  async function submitIncomeTransaction(sum: string) {
-    if (!selectedIncome || !selectedAccount || !sum) {
+  async function submitIncomeTransaction(transferredSum: number, sumAddToAccount: number, note?: string) {
+    if (!selectedIncome || !selectedAccount || !transferredSum || !sumAddToAccount) {
       return;
     }
 
     try {
-      const transactionSum = parseFloat(sum);
-      
-      // Add the income transaction (which also updates account balance)
+
       await addIncomeTransactionAsync({
         incomeId: selectedIncome.id,
         accountId: selectedAccount.id,
-        sum: transactionSum,
+        sum: transferredSum,
+        currency: selectedIncome.currency,
         date: new Date().toISOString().split('T')[0],
-        note: ''
-      }, selectedAccount.balance);
+        note: note
+      }, 
+      selectedAccount,
+      sumAddToAccount);
 
       setIncomeToAccountModalVisible(false);
       setSelectedAccount(null);
@@ -178,6 +179,8 @@ export default function HomeScreen() {
         setIsVisible={setIncomeToAccountModalVisible}
         text={`Add transaction from ${selectedIncome?.name} to ${selectedAccount?.name}?`}
         buttonText="Add Transaction >>>"
+        sourceCurrency={selectedIncome?.currency || Currency.UAH}
+        targetCurrency={selectedAccount?.currency || Currency.UAH}
         buttonAction={submitIncomeTransaction}
         onClose={() => {
           setSelectedAccount(null);

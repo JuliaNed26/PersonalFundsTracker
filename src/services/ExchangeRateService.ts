@@ -1,4 +1,4 @@
-import { insertOrIgnoreExchangeRatesAsync } from "../db/Repositories/ExchangeRatesRepository";
+import getExchangeRateAsync, { insertOrIgnoreExchangeRatesAsync } from "../db/Repositories/ExchangeRatesRepository";
 import ExchangeRateEntity from "../models/entities/ExchangeRateEntity";
 import { Currency } from "../models/enums/Currency";
 
@@ -21,4 +21,13 @@ export async function saveDefaultExchangeRates() : Promise<void> {
     })) as ExchangeRateEntity[];
 
     await insertOrIgnoreExchangeRatesAsync(exchangeRates);
+}
+
+export async function convertSumToCurrencyAsync(initialSum: number, initialCurrency: number, targetCurrency: number): Promise<number> {
+    var exchangeRate = await getExchangeRateAsync(initialCurrency, targetCurrency);
+    if (!exchangeRate) {
+        throw new Error(`Exchange rate from ${initialCurrency} to ${targetCurrency} not found`);
+    }
+
+    return initialSum * exchangeRate;
 }

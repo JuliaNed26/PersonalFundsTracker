@@ -2,23 +2,19 @@ import IncomeTransactionData from '../models/data/IncomeTransactionData';
 import IncomeTransactionEntity from '../models/entities/IncomeTransactionEntity';
 import { addIncomeTransaction } from '../db/Repositories/IncomeTransactionsRepository';
 import { updateAccountBalanceAsync } from '../db/Repositories/AccountRepositiory';
+import { mapIncomeTransactionDataToIncomeTransactionEntity } from './MapService';
+import { AccountData } from '../models/data/AccountData';
 
 export async function addIncomeTransactionAsync(
   transaction: IncomeTransactionData,
-  currentAccountBalance: number
+  account: AccountData,
+  sumAddToAccount: number
 ): Promise<void> {
-  const transactionEntity: IncomeTransactionEntity = {
-    incomeId: transaction.incomeId,
-    accountId: transaction.accountId,
-    sum: transaction.sum,
-    date: transaction.date,
-    note: transaction.note || ''
-  };
+  const transactionEntity: IncomeTransactionEntity = mapIncomeTransactionDataToIncomeTransactionEntity(transaction);
 
   // Add the income transaction
   await addIncomeTransaction(transactionEntity);
 
   // Update account balance
-  const newBalance = currentAccountBalance + transaction.sum;
-  await updateAccountBalanceAsync(transaction.accountId, newBalance);
+  await updateAccountBalanceAsync(transaction.accountId, account.balance + sumAddToAccount);
 }

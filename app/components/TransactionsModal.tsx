@@ -1,13 +1,19 @@
-import { ModalProps, Pressable, Modal as RNModal, StyleSheet, Text, View } from "react-native"
+import { Pressable, Modal as RNModal, StyleSheet, Text, View } from "react-native"
 import TextInputField from "./TextInputField";
 import { useState } from "react";
+import { validateTransactionData } from "../../src/services/TransactionValidationService";
+import TransactionValidationResult from "../../src/models/data/TransactionValidationResult";
+import { convertSumToCurrencyAsync } from "../../src/services/ExchangeRateService";
+import { currencyMap } from "../../src/models/constants/CurrencyList";
 
 type Props = {
     visible: boolean,
     setIsVisible: (visible: boolean) => void,
     text?: string,
     buttonText: string,
-    buttonAction: (sum: string) => void | Promise<void>,
+    sourceCurrency: number,
+    targetCurrency: number,
+    buttonAction: (transferredSum: number,sumAddToAccount: number, note?: string) => void | Promise<void>,
     onClose?: () => void,
 }
 
@@ -16,20 +22,67 @@ export default function TransactionsModal({
     setIsVisible, 
     text,
     buttonText,
+    sourceCurrency,
+    targetCurrency,
     buttonAction,
     onClose}: Props) {
     
-    const [sum, setSum] = useState('');
+    const [transactionSum, setTransactionSum] = useState('');
+    const [sumAddToAccount, setSumAddToAccount] = useState('');
+    const [note, setNote] = useState('');
+    const [errors, setErrors] = useState<TransactionValidationResult>({ isValid: true });
+
+    let sourceCurrencyLabel = currencyMap.get(sourceCurrency) || '';
+    let targetCurrencyLabel = currencyMap.get(targetCurrency) || '';
 
     const handleClose = () => {
         setIsVisible(false);
-        setSum('');
+        setTransactionSum('');
+        setSumAddToAccount('');
+        setNote('');
+        setErrors({ isValid: true });
         onClose?.();
     };
+    
+    async function handleTransferredSumChange(
+    value: string,
+    sourceCurrency: number,
+    targetCurrency: number,
+    setTransactionSum: (value: string) => void,
+    setSumAddToAccount: (value: string) => void
+    ): Promise<void> {
+        setTransactionSum(value);
 
-    const handleButtonPress = () => {
-        buttonAction(sum);
-        setSum('');
+        if(targetCurrency === sourceCurrency) {
+            setSumAddToAccount(value);
+            return;
+        }
+
+        try {
+            if (!value) {
+                setSumAddToAccount('');
+                return;
+            }
+            const numValue = parseFloat(value);
+            const convertedSum = await convertSumToCurrencyAsync(numValue, sourceCurrency, targetCurrency);
+            setSumAddToAccount(convertedSum.toFixed(2));
+        } catch (error) {
+            console.error('Error converting currency:', error);
+        }
+    }
+
+    const handleButtonPress = async () => {
+        let parsedTransferredSum = parseFloat(transactionSum);
+        let parsedSumAddToAccount = parseFloat(sumAddToAccount);
+        let validationResult = validateTransactionData(parsedTransferredSum, parsedSumAddToAccount);
+        if (!validationResult.isValid) {
+            setErrors(validationResult);
+            return;
+        }
+        await buttonAction(parsedTransferredSum, parsedSumAddToAccount, note);
+        setTransactionSum('');
+        setNote('');
+        setErrors({ isValid: true });
     };
 
     return (
@@ -50,11 +103,36 @@ export default function TransactionsModal({
                     </View>
                     { text ? <Text style={style.mainText}>{text}</Text> : null }
                     <TextInputField
-                        label="Sum:"
+                        label={`Sum ${sourceCurrencyLabel}:`}
                         placeholder="0.00" 
                         keyboardType="numeric" 
-                        value={sum}
-                        onChangeText={(value) => setSum(value)}
+                        value={transactionSum}
+                        errorMessage={errors.transferredSumErrorMessage}
+                        onChangeText={(value) => handleTransferredSumChange(
+                            value,
+                            sourceCurrency,
+                            targetCurrency,
+                            setTransactionSum,
+                            setSumAddToAccount
+                        )}
+                    />
+                    {
+                        targetCurrency != sourceCurrency
+                        ? <TextInputField
+                            label={`Sum ${targetCurrencyLabel}:`}
+                            placeholder="0.00"
+                            keyboardType="numeric" 
+                            value={sumAddToAccount}
+                            errorMessage={errors.sumAddToAccountErrorMessage}
+                            onChangeText={value => setSumAddToAccount(value)}
+                        />
+                        : null
+                    }
+                    <TextInputField
+                        label="Note:"
+                        placeholder="Note" 
+                        value={note}
+                        onChangeText={(value) => setNote(value)}
                     />
                     <View style={style.buttonsContainer}>
                         <Pressable style={style.button} onPress={handleButtonPress}>

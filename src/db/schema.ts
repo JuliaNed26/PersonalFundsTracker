@@ -29,6 +29,7 @@ export const incomeTransactions = sqliteTable('incomeTransactions', {
     .notNull()
     .references(() => incomes.id),
   sum: real('sum').notNull(),
+  currency: integer('currency').notNull(),
   date: text('date').notNull(),
   note: text('note')
 });
