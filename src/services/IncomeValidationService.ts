@@ -5,8 +5,6 @@ export function validateIncomeSourceData(income: IncomeSourceData) : IncomeValid
     const name = income.name.trim();
     let incomeValidationResult: IncomeValidationResult = { isValid: true };
     validateIncomeName(name, incomeValidationResult);
-    validateIncomeBalance(income.balance, incomeValidationResult); 
-
     return incomeValidationResult;
 }
 
@@ -21,18 +19,3 @@ function validateIncomeName(name: string, validationResult: IncomeValidationResu
     return true;
 }
 
-function validateIncomeBalance(balance: number, validationResult: IncomeValidationResult) : boolean {
-    if (Number.isNaN(balance)) {
-        validationResult.isValid = false;
-        validationResult.balanceErrorMessage = "Balance must be a number";
-        return false;
-    }
-
-    if (balance < 0) {
-        validationResult.isValid = false;
-        validationResult.balanceErrorMessage = "Balance cannot be negative";
-        return false;
-    }
-
-    return true;
-}

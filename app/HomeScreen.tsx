@@ -5,7 +5,7 @@ import HeaderCards from './HomeScreen/components/HeaderCards';
 import IncomeSection from './HomeScreen/components/IncomeSection';
 import AccountsSection from './HomeScreen/components/AccountsSection';
 import ExpensesSection from './HomeScreen/components/ExpensesSection';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { AccountListData } from '../src/models/data/AccountListData';
 import { getAccountsListAsync } from '../src/services/AccountService';
 import { currencyMap } from '../src/models/constants/CurrencyList';
@@ -18,8 +18,13 @@ import { getAllExpensesForCurrentMonthAsync } from '../src/services/ExpenseTypes
 import { AccountData } from '../src/models/data/AccountData';
 import TransactionsModal from './components/TransactionsModal';
 import { addIncomeTransactionAsync } from '../src/services/IncomeTransactionService';
+import { addTransferTransactionAsync } from '../src/services/AccountTransferService';
+import { addExpenseTransactionAsync } from '../src/services/ExpenseTransactionService';
+import { getTodayLocalDate } from '../src/services/DateService';
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const [defaultCurrency, setDefaultCurrency] = useState<number>(Currency.UAH);
   const [defaultCurrencySymbol, setDefaultCurrencySymbol] = useState<string>(currencyMap.get(Currency.UAH) || '');
   const [incomes, setIncomes] = useState<IncomeSourceData[]>([]);
   const [accountsList, setAccountsList] = useState<AccountListData>({
@@ -32,6 +37,10 @@ export default function HomeScreen() {
   const [selectedAccount, setSelectedAccount] = useState<AccountData | null>(null);
   const [selectedExpenseType, setSelectedExpenseType] = useState<ExpenseTypeData | null>(null);
   const [incomeToAccountModalVisible, setIncomeToAccountModalVisible] = useState<boolean>(false);
+  const [accountToAccountModalVisible, setAccountToAccountModalVisible] = useState<boolean>(false);
+  const [accountToExpenseModalVisible, setAccountToExpenseModalVisible] = useState<boolean>(false);
+  const [sourceAccountForTransfer, setSourceAccountForTransfer] = useState<AccountData | null>(null);
+  const [targetAccountForTransfer, setTargetAccountForTransfer] = useState<AccountData | null>(null);
 
   // ToDo: implement total planned calculation
   const totalExpenses = expenseTypes.reduce((sum, item) => sum + item.balance, 0);
@@ -49,9 +58,8 @@ export default function HomeScreen() {
     return await getAllExpensesForCurrentMonthAsync();
   }, []);
 
-  const getDefaultCurrencySymbol = useCallback(async (): Promise<string> => {
-    var defaultCurrency = await getDefaultCurrencySetting();
-    return currencyMap.get(defaultCurrency) || '';
+  const getDefaultCurrency = useCallback(async (): Promise<number> => {
+    return await getDefaultCurrencySetting();
   }, []);
 
   async function submitIncomeTransaction(transferredSum: number, sumAddToAccount: number, note?: string) {
@@ -66,7 +74,7 @@ export default function HomeScreen() {
         accountId: selectedAccount.id,
         sum: transferredSum,
         currency: selectedIncome.currency,
-        date: new Date().toISOString().split('T')[0],
+        date: getTodayLocalDate(),
         note: note
       }, 
       selectedAccount,
@@ -78,6 +86,61 @@ export default function HomeScreen() {
       await handleOnRefresh();
     } catch (err) {
       console.error('Failed to add income transaction', err);
+    }
+  }
+
+  async function submitTransferTransaction(transferredSum: number, sumAddToAccount: number) {
+    if (!sourceAccountForTransfer || !targetAccountForTransfer || !transferredSum || !sumAddToAccount) {
+      return;
+    }
+
+    try {
+      await addTransferTransactionAsync(
+        {
+          sourceAccountId: sourceAccountForTransfer.id,
+          targetAccountId: targetAccountForTransfer.id,
+          sumSent: transferredSum,
+          sumReceived: sumAddToAccount,
+          date: getTodayLocalDate()
+        },
+        sourceAccountForTransfer,
+        targetAccountForTransfer
+      );
+
+      setAccountToAccountModalVisible(false);
+      setSelectedAccount(null);
+      setSourceAccountForTransfer(null);
+      setTargetAccountForTransfer(null);
+      await handleOnRefresh();
+    } catch (err) {
+      console.error('Failed to add account transfer transaction', err);
+    }
+  }
+
+  async function submitExpenseTransaction(transferredSum: number, sumReceived: number, note?: string) {
+    if (!selectedAccount || !selectedExpenseType || !transferredSum || !sumReceived) {
+      return;
+    }
+
+    try {
+      await addExpenseTransactionAsync(
+        {
+          accountId: selectedAccount.id,
+          expenseId: selectedExpenseType.id,
+          sumSent: transferredSum,
+          sumReceived: sumReceived,
+          date: getTodayLocalDate(),
+          note,
+        },
+        selectedAccount
+      );
+
+      setAccountToExpenseModalVisible(false);
+      setSelectedExpenseType(null);
+      setSelectedAccount(null);
+      await handleOnRefresh();
+    } catch (err) {
+      console.error('Failed to add expense transaction', err);
     }
   }
 
@@ -96,31 +159,50 @@ export default function HomeScreen() {
   }
 
   function onAccountPress(pressedAccount: AccountData | null){
-    setSelectedAccount(pressedAccount);
+    if (!pressedAccount) {
+      setSelectedAccount(null);
+      return;
+    }
 
-    if (pressedAccount)
-    {
-      if (selectedIncome)
-      {
-        setIncomeToAccountModalVisible(true);
-      }
-
-      if (selectedExpenseType)
-      {
+    if (selectedIncome) {
+      setSelectedAccount(pressedAccount);
+      setIncomeToAccountModalVisible(true);
+      if (selectedExpenseType) {
         setSelectedExpenseType(null);
       }
+      return;
+    }
+
+    if (selectedAccount && selectedAccount.id !== pressedAccount.id) {
+      setSourceAccountForTransfer(selectedAccount);
+      setTargetAccountForTransfer(pressedAccount);
+      setAccountToAccountModalVisible(true);
+      return;
+    }
+
+    setSelectedAccount(pressedAccount);
+
+    if (selectedExpenseType)
+    {
+      setSelectedExpenseType(null);
     }
   }
 
-  function onExpenseTypePress(pressedExpenseType: ExpenseTypeData){
-    if ((selectedExpenseType && selectedExpenseType.id === pressedExpenseType.id)
-        || selectedIncome || !selectedAccount)
+  function onExpenseTypePress(pressedExpenseType: ExpenseTypeData | null){
+    if (!pressedExpenseType)
+    {
+      setSelectedExpenseType(null);
+      return;
+    }
+
+    if ((selectedExpenseType && selectedExpenseType.id === pressedExpenseType.id) || selectedIncome || !selectedAccount)
     {
       setSelectedExpenseType(null);
       return;
     }
 
     setSelectedExpenseType(pressedExpenseType);
+    setAccountToExpenseModalVisible(true);
   }
 
   useFocusEffect(
@@ -147,13 +229,19 @@ export default function HomeScreen() {
       setExpenseTypes(expenseTypesList);
       setSelectedAccount(null);
       setSelectedExpenseType(null);
-      const currencySymbol = await getDefaultCurrencySymbol();
+      const currentDefaultCurrency = await getDefaultCurrency();
+      setDefaultCurrency(currentDefaultCurrency);
+      const currencySymbol = currencyMap.get(currentDefaultCurrency) || '';
       setDefaultCurrencySymbol(currencySymbol);
     } 
     catch (err) 
     { 
       console.error('Failed to refresh incomes', err);
     }
+  }
+
+  function handleOpenContextMenu() {
+    router.push('/ContextMenuScreen');
   }
   
   return (
@@ -165,13 +253,18 @@ export default function HomeScreen() {
             balance={accountsList.totalBalance} 
             expenses={totalExpenses} 
             planned={totalPlanned} 
-            defaultCurrencySymbol={defaultCurrencySymbol} />
+            defaultCurrencySymbol={defaultCurrencySymbol}
+            onMenuPress={handleOpenContextMenu} />
         </View>
 
         <View style={styles.contentContainer}>
           <IncomeSection incomes={incomes} selectedIncome={selectedIncome} setSelectedIncome={onIncomePress} onRefresh={handleOnRefresh} />
           <AccountsSection accounts={accountsList.accounts} selectedAccount={selectedAccount} setSelectedAccount={onAccountPress} onRefresh={handleOnRefresh}/>
-          <ExpensesSection expenses={expenseTypes} onRefresh={handleOnRefresh}/>
+          <ExpensesSection
+            expenses={expenseTypes}
+            selectedExpenseType={selectedExpenseType}
+            setSelectedExpenseType={onExpenseTypePress}
+            onRefresh={handleOnRefresh}/>
         </View>
       </ScrollView>
       <TransactionsModal
@@ -182,6 +275,36 @@ export default function HomeScreen() {
         sourceCurrency={selectedIncome?.currency || Currency.UAH}
         targetCurrency={selectedAccount?.currency || Currency.UAH}
         buttonAction={submitIncomeTransaction}
+        onClose={() => {
+          setSelectedAccount(null);
+          setSelectedIncome(null);
+          setSelectedExpenseType(null);
+        }}/>
+      <TransactionsModal
+        visible={accountToAccountModalVisible}
+        setIsVisible={setAccountToAccountModalVisible}
+        text={`Transfer from ${sourceAccountForTransfer?.name} to ${targetAccountForTransfer?.name}?`}
+        buttonText="Transfer >>>"
+        sourceCurrency={sourceAccountForTransfer?.currency || Currency.UAH}
+        targetCurrency={targetAccountForTransfer?.currency || Currency.UAH}
+        buttonAction={submitTransferTransaction}
+        showNote={false}
+        onClose={() => {
+          setSelectedAccount(null);
+          setSelectedIncome(null);
+          setSelectedExpenseType(null);
+          setSourceAccountForTransfer(null);
+          setTargetAccountForTransfer(null);
+        }}/>
+      <TransactionsModal
+        visible={accountToExpenseModalVisible}
+        setIsVisible={setAccountToExpenseModalVisible}
+        text={`Add transaction from ${selectedAccount?.name} to ${selectedExpenseType?.name}?`}
+        buttonText="Add Transaction >>>"
+        sourceCurrency={selectedAccount?.currency || Currency.UAH}
+        targetCurrency={defaultCurrency}
+        buttonAction={submitExpenseTransaction}
+        showNote={true}
         onClose={() => {
           setSelectedAccount(null);
           setSelectedIncome(null);

@@ -10,9 +10,16 @@ import { deleteExpenseAsync } from '../../../src/services/ExpenseTypesService';
 interface ExpensesSectionProps {
   expenses: ExpenseTypeData[];
   onRefresh?: () => Promise<void> | void;
+  selectedExpenseType: ExpenseTypeData | null;
+  setSelectedExpenseType: (expenseType: ExpenseTypeData | null) => void;
 }
 
-export default function ExpensesSection({ expenses, onRefresh }: ExpensesSectionProps) {
+export default function ExpensesSection({
+  expenses,
+  onRefresh,
+  selectedExpenseType,
+  setSelectedExpenseType,
+}: ExpensesSectionProps) {
   const router = useRouter();
   const [expenseTypeModalOpen, setExpenseTypeModalOpen] = useState(false);
   const [deleteExpenseTypeModalOpen, setDeleteExpenseTypeModalOpen] = useState(false);
@@ -51,10 +58,34 @@ export default function ExpensesSection({ expenses, onRefresh }: ExpensesSection
       params: { expenseTypeId: pressedExpenseType?.id }
     });
   }
+
+  async function handleWatchTransactions() {
+    if (!pressedExpenseType) {
+      return;
+    }
+
+    setExpenseTypeModalOpen(false);
+    router.push({
+      pathname: '/ExpenseTransactionsScreen',
+      params: { expenseTypeId: pressedExpenseType.id }
+    });
+  }
+
+  function handleExpenseTypePress(expenseType: ExpenseTypeData) {
+    if (selectedExpenseType?.id === expenseType.id) {
+      setSelectedExpenseType(null);
+      return;
+    }
+
+    setSelectedExpenseType(expenseType);
+  }
+
   const getExpenseColor = (balance: number, limit?: number) => {
-    if (balance === 0) return 'gray';
-    if (limit && balance > limit) return 'red';
-    return 'green';
+    if (balance <= 0) return 'darkGray';
+    if (limit === undefined || limit <= 0) return 'darkGreen';
+    if (balance > limit) return 'red';
+    if (balance > limit * 0.75) return 'darkOrange';
+    return 'darkGreen';
   };
 
   const itemWidth = 100;
@@ -70,13 +101,13 @@ export default function ExpensesSection({ expenses, onRefresh }: ExpensesSection
         {expenses.map((expenseType) => (
           <Pressable
             key={expenseType.id}
-            onLongPress={() => handleOnLongPress(expenseType)}>
+            onLongPress={() => handleOnLongPress(expenseType)}
+            onPress={() => handleExpenseTypePress(expenseType)}
+            style={selectedExpenseType?.id === expenseType.id ? styles.highlightedItem : null}>
             <CircleItem
               name={expenseType.name}
               balance={expenseType.balance}
-              color={
-                getExpenseColor(expenseType.balance, expenseType.limit) as 'green' | 'red' | 'gray' | 'orange'
-              }
+              color={getExpenseColor(expenseType.balance, expenseType.limit)}
               showLimit={expenseType.limit !== undefined}
               limit={expenseType.limit}
             />
@@ -92,7 +123,9 @@ export default function ExpensesSection({ expenses, onRefresh }: ExpensesSection
         firstButtonText='Update'
         firstButtonAction={handleUpdateExpenseType}
         secondButtonText='Delete'
-        secondButtonAction={handleDeleteActionAccepted}/>
+        secondButtonAction={handleDeleteActionAccepted}
+        thirdButtonText='Watch Transactions'
+        thirdButtonAction={handleWatchTransactions}/>
       
       <Modal
         visible={deleteExpenseTypeModalOpen}
@@ -128,5 +161,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingRight: 20,
     paddingBottom: 12,
+  },
+  highlightedItem: {
+    opacity: 0.6,
   },
 });

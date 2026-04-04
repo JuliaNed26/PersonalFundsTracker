@@ -3,11 +3,16 @@ import AccountUpdateData from "../models/data/AccountUpdateData";
 import ExpenseTypeData from "../models/data/ExpenseTypeData";
 import { IncomeSourceData } from "../models/data/IncomeSourceData";
 import IncomeTransactionData from "../models/data/IncomeTransactionData";
+import SavingGoalData from "../models/data/SavingGoalData";
+import SavingGoalUpdateData from "../models/data/SavingGoalUpdateData";
 import { AccountEntity } from "../models/entities/AccountEntity";
 import { AccountUpdateEntity } from "../models/entities/AccountUpdateEntity";
 import { ExpenseTypeEntity } from "../models/entities/ExpenseTypeEntity";
 import { IncomeSourceEntity } from "../models/entities/IncomeEntity";
 import IncomeTransactionEntity from "../models/entities/IncomeTransactionEntity";
+import SavingGoalEntity from "../models/entities/SavingGoalEntity";
+import SavingGoalUpdateEntity from "../models/entities/SavingGoalUpdateEntity";
+import { normalizeSavingGoalName } from "./SavingGoalsNormalizationService";
 
 export function mapAccountEntityToAccountData(account: AccountEntity) : AccountData
 {
@@ -71,13 +76,16 @@ export function mapIncomeSourceDataToIncomeEntity(income: IncomeSourceData) : In
     } as IncomeSourceEntity;
 }
 
-export function mapExpenseTypeEntityToExpenseTypeData(expenseType: ExpenseTypeEntity) : ExpenseTypeData
+export function mapExpenseTypeEntityToExpenseTypeData(
+    expenseType: ExpenseTypeEntity,
+    balance: number = 0
+) : ExpenseTypeData
 {
     return {
         id: expenseType.id,
         name: expenseType.name,
         limit: expenseType.limit,
-        balance: 0
+        balance: balance
     } as ExpenseTypeData;
 }
 
@@ -90,6 +98,50 @@ export function mapExpenseTypeDataToExpenseTypeEntity(expenseType: ExpenseTypeDa
     } as ExpenseTypeEntity;
 }
 
+export function mapSavingGoalEntityToSavingGoalData(savingGoal: SavingGoalEntity): SavingGoalData {
+    return {
+        id: savingGoal.id,
+        name: savingGoal.name,
+        currency: savingGoal.currency,
+        monthGoal: savingGoal.monthGoal,
+        totalGoal: savingGoal.totalGoal,
+    } as SavingGoalData;
+}
+
+export function mapSavingGoalDataToSavingGoalEntity(savingGoal: SavingGoalData): SavingGoalEntity {
+    return {
+        id: savingGoal.id,
+        name: savingGoal.name.trim(),
+        normalizedName: normalizeSavingGoalName(savingGoal.name),
+        currency: savingGoal.currency,
+        monthGoal: savingGoal.monthGoal,
+        totalGoal: savingGoal.totalGoal,
+    } as SavingGoalEntity;
+}
+
+export function mapSavingGoalDataToSavingGoalUpdateData(
+    savingGoal: SavingGoalData
+): SavingGoalUpdateData {
+    return {
+        id: savingGoal.id,
+        name: savingGoal.name,
+        monthGoal: savingGoal.monthGoal,
+        totalGoal: savingGoal.totalGoal,
+    } as SavingGoalUpdateData;
+}
+
+export function mapSavingGoalUpdateDataToSavingGoalUpdateEntity(
+    savingGoal: SavingGoalUpdateData
+): SavingGoalUpdateEntity {
+    return {
+        id: savingGoal.id,
+        name: savingGoal.name.trim(),
+        normalizedName: normalizeSavingGoalName(savingGoal.name),
+        monthGoal: savingGoal.monthGoal,
+        totalGoal: savingGoal.totalGoal,
+    } as SavingGoalUpdateEntity;
+}
+
 export function mapIncomeTransactionEntityToIncomeTransactionData(transaction: IncomeTransactionEntity) : IncomeTransactionData
 {
     return {
@@ -97,6 +149,7 @@ export function mapIncomeTransactionEntityToIncomeTransactionData(transaction: I
         accountId: transaction.accountId,
         sum: transaction.sum,
         currency: transaction.currency,
+        sumAddedToAccount: transaction.sumAddedToAccount,
         date: transaction.date,
         note: transaction.note
     } as IncomeTransactionData;
@@ -109,6 +162,7 @@ export function mapIncomeTransactionDataToIncomeTransactionEntity(transaction: I
         accountId: transaction.accountId,
         sum: transaction.sum,
         currency: transaction.currency,
+        sumAddedToAccount: transaction.sumAddedToAccount,
         date: transaction.date,
         note: transaction.note
     } as IncomeTransactionEntity;

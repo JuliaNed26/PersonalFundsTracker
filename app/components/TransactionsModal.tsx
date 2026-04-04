@@ -14,6 +14,7 @@ type Props = {
     sourceCurrency: number,
     targetCurrency: number,
     buttonAction: (transferredSum: number,sumAddToAccount: number, note?: string) => void | Promise<void>,
+    showNote?: boolean,
     onClose?: () => void,
 }
 
@@ -25,6 +26,7 @@ export default function TransactionsModal({
     sourceCurrency,
     targetCurrency,
     buttonAction,
+    showNote = true,
     onClose}: Props) {
     
     const [transactionSum, setTransactionSum] = useState('');
@@ -44,28 +46,55 @@ export default function TransactionsModal({
         onClose?.();
     };
     
-    async function handleTransferredSumChange(
-    value: string,
-    sourceCurrency: number,
-    targetCurrency: number,
-    setTransactionSum: (value: string) => void,
-    setSumAddToAccount: (value: string) => void
-    ): Promise<void> {
+    async function handleSourceSumChange(value: string): Promise<void> {
         setTransactionSum(value);
 
-        if(targetCurrency === sourceCurrency) {
+        if (sourceCurrency === targetCurrency) {
             setSumAddToAccount(value);
             return;
         }
 
+        if (!value) {
+            setSumAddToAccount('');
+            return;
+        }
+
+        const numericValue = parseFloat(value);
+        if (Number.isNaN(numericValue)) {
+            setSumAddToAccount('');
+            return;
+        }
+
         try {
-            if (!value) {
-                setSumAddToAccount('');
-                return;
-            }
-            const numValue = parseFloat(value);
-            const convertedSum = await convertSumToCurrencyAsync(numValue, sourceCurrency, targetCurrency);
+            const convertedSum = await convertSumToCurrencyAsync(numericValue, sourceCurrency, targetCurrency);
             setSumAddToAccount(convertedSum.toFixed(2));
+        } catch (error) {
+            console.error('Error converting currency:', error);
+        }
+    }
+
+    async function handleTargetSumChange(value: string): Promise<void> {
+        setSumAddToAccount(value);
+
+        if (sourceCurrency === targetCurrency) {
+            setTransactionSum(value);
+            return;
+        }
+
+        if (!value) {
+            setTransactionSum('');
+            return;
+        }
+
+        const numericValue = parseFloat(value);
+        if (Number.isNaN(numericValue)) {
+            setTransactionSum('');
+            return;
+        }
+
+        try {
+            const convertedSum = await convertSumToCurrencyAsync(numericValue, targetCurrency, sourceCurrency);
+            setTransactionSum(convertedSum.toFixed(2));
         } catch (error) {
             console.error('Error converting currency:', error);
         }
@@ -79,8 +108,9 @@ export default function TransactionsModal({
             setErrors(validationResult);
             return;
         }
-        await buttonAction(parsedTransferredSum, parsedSumAddToAccount, note);
+        await buttonAction(parsedTransferredSum, parsedSumAddToAccount, showNote ? note : undefined);
         setTransactionSum('');
+        setSumAddToAccount('');
         setNote('');
         setErrors({ isValid: true });
     };
@@ -108,13 +138,7 @@ export default function TransactionsModal({
                         keyboardType="numeric" 
                         value={transactionSum}
                         errorMessage={errors.transferredSumErrorMessage}
-                        onChangeText={(value) => handleTransferredSumChange(
-                            value,
-                            sourceCurrency,
-                            targetCurrency,
-                            setTransactionSum,
-                            setSumAddToAccount
-                        )}
+                        onChangeText={handleSourceSumChange}
                     />
                     {
                         targetCurrency != sourceCurrency
@@ -124,16 +148,18 @@ export default function TransactionsModal({
                             keyboardType="numeric" 
                             value={sumAddToAccount}
                             errorMessage={errors.sumAddToAccountErrorMessage}
-                            onChangeText={value => setSumAddToAccount(value)}
+                            onChangeText={handleTargetSumChange}
                         />
                         : null
                     }
-                    <TextInputField
-                        label="Note:"
-                        placeholder="Note" 
-                        value={note}
-                        onChangeText={(value) => setNote(value)}
-                    />
+                    {showNote
+                        ? <TextInputField
+                            label="Note:"
+                            placeholder="Note"
+                            value={note}
+                            onChangeText={(value) => setNote(value)}
+                        />
+                        : null}
                     <View style={style.buttonsContainer}>
                         <Pressable style={style.button} onPress={handleButtonPress}>
                             <Text style={style.buttonText}>{buttonText}</Text>

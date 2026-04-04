@@ -24,10 +24,23 @@ export async function saveDefaultExchangeRates() : Promise<void> {
 }
 
 export async function convertSumToCurrencyAsync(initialSum: number, initialCurrency: number, targetCurrency: number): Promise<number> {
-    var exchangeRate = await getExchangeRateAsync(initialCurrency, targetCurrency);
-    if (!exchangeRate) {
-        throw new Error(`Exchange rate from ${initialCurrency} to ${targetCurrency} not found`);
+    if (initialCurrency === targetCurrency) {
+        return initialSum;
     }
 
-    return initialSum * exchangeRate;
+    var exchangeRate = await getExchangeRateAsync(initialCurrency, targetCurrency);
+    if (exchangeRate) {
+        return initialSum * exchangeRate;
+    }
+
+    if (initialCurrency !== Currency.UAH && targetCurrency !== Currency.UAH) {
+        const toUahRate = await getExchangeRateAsync(initialCurrency, Currency.UAH);
+        const fromUahRate = await getExchangeRateAsync(Currency.UAH, targetCurrency);
+
+        if (toUahRate && fromUahRate) {
+            return initialSum * toUahRate * fromUahRate;
+        }
+    }
+
+    throw new Error(`Exchange rate from ${initialCurrency} to ${targetCurrency} not found`);
 }

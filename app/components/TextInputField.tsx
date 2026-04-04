@@ -14,7 +14,14 @@ type Props = {
     errorMessage?: string;
 } & TextInputProps;
 
-export default function TextInputField({ label, placeholder, value, onChangeText, errorMessage }: Props) {
+export default function TextInputField({
+    label,
+    placeholder,
+    value,
+    onChangeText,
+    errorMessage,
+    ...textInputProps
+}: Props) {
     return (
         <View style={styles.container}>
             {label ? <Text style={styles.label}>{label}</Text> : null}
@@ -22,6 +29,7 @@ export default function TextInputField({ label, placeholder, value, onChangeText
                 placeholder={placeholder}
                 value={value}
                 onChangeText={onChangeText}
+                {...textInputProps}
             />
 
             {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}

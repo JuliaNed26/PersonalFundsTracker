@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { sqliteTable, text, integer, real, SQLiteBoolean, primaryKey } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey, unique } from 'drizzle-orm/sqlite-core';
 
 export const incomes = sqliteTable('incomes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -30,6 +30,7 @@ export const incomeTransactions = sqliteTable('incomeTransactions', {
     .references(() => incomes.id),
   sum: real('sum').notNull(),
   currency: integer('currency').notNull(),
+  sumAddedToAccount: real('sumAddedToAccount'),
   date: text('date').notNull(),
   note: text('note')
 });
@@ -56,6 +57,7 @@ export const expenseTransactions = sqliteTable('expenseTransactions', {
   sumSent: real('sumSent').notNull(),
   sumReceived: real('sumReceived').notNull(),
   date: text('date').notNull(),
+  note: text('note'),
 });
 
 export const exchangeRates = sqliteTable(
@@ -67,6 +69,24 @@ export const exchangeRates = sqliteTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.base, table.quote] })
+  })
+);
+
+export const savingGoals = sqliteTable(
+  'savingGoals',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    name: text('name').notNull(),
+    normalizedName: text('normalizedName').notNull(),
+    currency: integer('currency').notNull(),
+    monthGoal: real('monthGoal').notNull(),
+    totalGoal: real('totalGoal').notNull(),
+  },
+  (table) => ({
+    normalizedNameCurrencyUnique: unique('savingGoals_normalizedName_currency_unique').on(
+      table.normalizedName,
+      table.currency
+    ),
   })
 );
 
@@ -95,3 +115,4 @@ export const accountTransactionsRelations = relations(accountTransactions, ({ on
 export type Income = typeof incomes.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
 export type Expense = typeof expenses.$inferSelect;
+export type SavingGoal = typeof savingGoals.$inferSelect;

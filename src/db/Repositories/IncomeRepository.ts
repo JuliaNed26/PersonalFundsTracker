@@ -3,13 +3,7 @@ import { incomes, incomeTransactions } from '../schema';
 import type { Income } from '../schema';
 import type { IncomeSourceEntity } from '../../models/entities/IncomeEntity';
 import { eq, and, gte, lte } from 'drizzle-orm';
-
-function getCurrentMonthDateRange() {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-  return { startOfMonth, endOfMonth };
-}
+import { getCurrentMonthDateRange } from '../../services/DateService';
 
 export async function getAllIncomesAsync(): Promise<IncomeSourceEntity[]> {
   const foundIncomes = (await db.query.incomes.findMany({

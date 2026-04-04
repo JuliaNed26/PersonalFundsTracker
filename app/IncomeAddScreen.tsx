@@ -44,10 +44,6 @@ export default function IncomeAddScreen() {
             setErrors((prev) => ({ ...prev, nameErrorMessage: validationResult.nameErrorMessage }));
         }
 
-        if (validationResult.balanceErrorMessage) {
-            setErrors((prev) => ({ ...prev, balanceErrorMessage: validationResult.balanceErrorMessage }));
-        }
-
         return false;
     }
 
@@ -62,12 +58,6 @@ export default function IncomeAddScreen() {
                         value={incomeSourceData.name}
                         onChangeText={(text) => setIncomeSourceData({ ...incomeSourceData, name: text })}
                         errorMessage={errors.nameErrorMessage}/>
-                    <TextInputField 
-                        label="Balance" 
-                        placeholder="0"
-                        value={incomeSourceData.balance.toString()}
-                        onChangeText={(text) => setIncomeSourceData({ ...incomeSourceData, balance: parseFloat(text) || 0 })}
-                        errorMessage={errors.balanceErrorMessage}/>
                     <DropdownList
                         data={currencyDropdownData}
                         defaultOption={currencyDropdownData[0]}

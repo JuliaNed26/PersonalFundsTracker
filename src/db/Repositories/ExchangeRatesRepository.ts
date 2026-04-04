@@ -6,7 +6,7 @@ import ExchangeRateRetrievalEntity from '../../models/entities/ExchangeRateRetri
 
 export default async function getExchangeRateAsync(baseCurrency: number, quoteQurrency: number): Promise<number | null> {
     var exchangeRate = await db.query.exchangeRates.findFirst({
-        where: eq(exchangeRates.base, baseCurrency) && (eq(exchangeRates.quote, quoteQurrency)),
+        where: and(eq(exchangeRates.base, baseCurrency), eq(exchangeRates.quote, quoteQurrency)),
     });
 
     return exchangeRate ? exchangeRate.rate : null;

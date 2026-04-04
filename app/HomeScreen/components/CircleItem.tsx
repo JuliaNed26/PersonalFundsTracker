@@ -5,7 +5,7 @@ interface CircleItemProps {
   name: string;
   balance?: number;
   currency?: number;
-  color: 'green' | 'orange' | 'gray' | 'red';
+  color: 'green' | 'orange' | 'gray' | 'red' | 'darkGreen' | 'darkOrange' | 'darkGray';
   showLimit?: boolean;
   limit?: number;
 }
@@ -16,6 +16,9 @@ export default function CircleItem({ name, balance, currency, color, showLimit, 
     orange: styles.circleOrange,
     gray: styles.circleGray,
     red: styles.circleRed,
+    darkGreen: styles.circleDarkGreen,
+    darkOrange: styles.circleDarkOrange,
+    darkGray: styles.circleDarkGray,
   };
 
   const iconColor = {
@@ -23,6 +26,9 @@ export default function CircleItem({ name, balance, currency, color, showLimit, 
     orange: styles.iconWhite,
     gray: styles.iconGray,
     red: styles.iconWhite,
+    darkGreen: styles.iconWhite,
+    darkOrange: styles.iconWhite,
+    darkGray: styles.iconWhite,
   };
 
   return (
@@ -83,7 +89,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#D1D5DB',
   },
   circleRed: {
-    backgroundColor: '#EF4444',
+    backgroundColor: '#d00000',
+  },
+  circleDarkGreen: {
+    backgroundColor: '#237f46',
+  },
+  circleDarkOrange: {
+    backgroundColor: '#b64a25',
+  },
+  circleDarkGray: {
+    backgroundColor: '#67707c',
   },
   icon: {
     fontSize: 28,

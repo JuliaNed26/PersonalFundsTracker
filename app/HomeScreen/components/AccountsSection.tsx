@@ -51,6 +51,18 @@ export default function AccountsSection({ accounts, onRefresh, setSelectedAccoun
     setDeleteAccountModalOpen(false);
   }
 
+  async function handleWatchTransactions() {
+    if (!pressedAccount) {
+      return;
+    }
+
+    setAccountsModalOpen(false);
+    router.push({
+      pathname: '/AccountTransactionsScreen',
+      params: { accountId: pressedAccount.id }
+    });
+  }
+
   function handleAccountPress(account: AccountData) {
     if (selectedAccount?.id === account.id)
     {
@@ -100,7 +112,9 @@ export default function AccountsSection({ accounts, onRefresh, setSelectedAccoun
         firstButtonText='Update'
         firstButtonAction={handleUpdateAccount}
         secondButtonText='Delete'
-        secondButtonAction={handleDeleteActionAccepted}/>
+        secondButtonAction={handleDeleteActionAccepted}
+        thirdButtonText='Watch Transactions'
+        thirdButtonAction={handleWatchTransactions}/>
       
       <Modal
         visible={deleteAccountModalOpen}
