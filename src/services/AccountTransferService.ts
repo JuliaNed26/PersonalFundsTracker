@@ -1,6 +1,9 @@
-import { getAccountByIdAsync, getAllAccountsAsync, updateAccountBalanceAsync } from "../db/Repositories/AccountRepositiory";
+import { db } from "../db";
+import { getAccountById, getAccountByIdAsync, getAllAccountsAsync, updateAccountBalances } from "../db/Repositories/AccountRepositiory";
 import {
+    addAccountTransferTransaction,
     addAccountTransferTransactionAsync,
+    deleteAccountTransferTransaction,
     deleteAccountTransferTransactionAsync,
     getAccountTransferTransactionsByAccountIdAsync,
 } from "../db/Repositories/AccountTransactionsRepository";
@@ -11,13 +14,35 @@ import { Currency } from "../models/enums/Currency";
 
 export async function addTransferTransactionAsync(
     transfer: AccountTransferData,
-    sourceAccount: AccountData,
-    targetAccount: AccountData
+    _sourceAccount: AccountData,
+    _targetAccount: AccountData
 ): Promise<void> {
-    await addAccountTransferTransactionAsync(transfer);
+    db.transaction((tx) => {
+        const sourceAccount = getAccountById(transfer.sourceAccountId, tx);
+        const targetAccount = getAccountById(transfer.targetAccountId, tx);
 
-    await updateAccountBalanceAsync(sourceAccount.id, sourceAccount.balance - transfer.sumSent);
-    await updateAccountBalanceAsync(targetAccount.id, targetAccount.balance + transfer.sumReceived);
+        if (!sourceAccount || !targetAccount) {
+            throw new Error("Failed to create transfer transaction: account not found");
+        }
+
+        if (sourceAccount.availableBalance < transfer.sumSent) {
+            throw new Error("Insufficient available balance");
+        }
+
+        addAccountTransferTransaction(transfer, tx);
+        updateAccountBalances(
+            sourceAccount.id,
+            sourceAccount.balance - transfer.sumSent,
+            sourceAccount.availableBalance - transfer.sumSent,
+            tx
+        );
+        updateAccountBalances(
+            targetAccount.id,
+            targetAccount.balance + transfer.sumReceived,
+            targetAccount.availableBalance + transfer.sumReceived,
+            tx
+        );
+    });
 }
 
 export async function deleteTransferTransactionAsync(
@@ -32,9 +57,21 @@ export async function deleteTransferTransactionAsync(
         throw new Error("Failed to delete transfer transaction: account not found");
     }
 
-    await deleteAccountTransferTransactionAsync(transfer);
-    await updateAccountBalanceAsync(sourceAccount.id, sourceAccount.balance + transfer.sumSent);
-    await updateAccountBalanceAsync(targetAccount.id, targetAccount.balance - transfer.sumReceived);
+    db.transaction((tx) => {
+        deleteAccountTransferTransaction(transfer, tx);
+        updateAccountBalances(
+            sourceAccount.id,
+            sourceAccount.balance + transfer.sumSent,
+            sourceAccount.availableBalance + transfer.sumSent,
+            tx
+        );
+        updateAccountBalances(
+            targetAccount.id,
+            targetAccount.balance - transfer.sumReceived,
+            targetAccount.availableBalance - transfer.sumReceived,
+            tx
+        );
+    });
 }
 
 export async function getTransferTransactionsForAccountAsync(

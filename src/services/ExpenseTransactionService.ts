@@ -1,7 +1,8 @@
-import { updateAccountBalanceAsync } from "../db/Repositories/AccountRepositiory";
+import { db } from "../db";
+import { getAccountById, updateAccountBalances } from "../db/Repositories/AccountRepositiory";
 import {
-    addExpenseTransactionAsync as addExpenseTransactionToDbAsync,
-    deleteExpenseTransactionAsync as deleteExpenseTransactionFromDbAsync,
+    addExpenseTransaction,
+    deleteExpenseTransaction,
     getAllExpenseTransactionsForAnalyticsAsync as getAllExpenseTransactionsForAnalyticsFromDbAsync,
     getExpenseBalancesByExpenseIdAsync,
     getExpenseTransactionsByAccountIdAsync,
@@ -12,14 +13,29 @@ import type { ExpenseTransactionTrendRow } from "../db/Repositories/ExpenseTrans
 import { AccountData } from "../models/data/AccountData";
 import ExpenseTransactionData from "../models/data/ExpenseTransactionData";
 import ExpenseTransactionListItem from "../models/data/ExpenseTransactionListItem";
-import { getAccountAsync } from "./AccountService";
 
 export async function addExpenseTransactionAsync(
     transaction: ExpenseTransactionData,
-    account: AccountData
+    _account: AccountData
 ): Promise<void> {
-    await addExpenseTransactionToDbAsync(transaction);
-    await updateAccountBalanceAsync(account.id, account.balance - transaction.sumSent);
+    db.transaction((tx) => {
+        const account = getAccountById(transaction.accountId, tx);
+        if (!account) {
+            throw new Error(`Account with id ${transaction.accountId} not found`);
+        }
+
+        if (account.availableBalance < transaction.sumSent) {
+            throw new Error("Insufficient available balance");
+        }
+
+        addExpenseTransaction(transaction, tx);
+        updateAccountBalances(
+            account.id,
+            account.balance - transaction.sumSent,
+            account.availableBalance - transaction.sumSent,
+            tx
+        );
+    });
 }
 
 export async function getExpenseTransactionsForAccountAsync(
@@ -44,9 +60,20 @@ export async function updateExpenseTransactionNoteAsync(
 export async function deleteExpenseTransactionAsync(
     transaction: ExpenseTransactionData
 ): Promise<void> {
-    const account = await getAccountAsync(transaction.accountId);
-    await deleteExpenseTransactionFromDbAsync(transaction);
-    await updateAccountBalanceAsync(transaction.accountId, account.balance + transaction.sumSent);
+    db.transaction((tx) => {
+        const account = getAccountById(transaction.accountId, tx);
+        if (!account) {
+            throw new Error(`Account with id ${transaction.accountId} not found`);
+        }
+
+        deleteExpenseTransaction(transaction, tx);
+        updateAccountBalances(
+            account.id,
+            account.balance + transaction.sumSent,
+            account.availableBalance + transaction.sumSent,
+            tx
+        );
+    });
 }
 
 export async function getExpenseBalancesAsync(): Promise<Record<number, number>> {

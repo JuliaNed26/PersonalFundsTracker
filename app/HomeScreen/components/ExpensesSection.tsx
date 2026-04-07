@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
 import CircleItem from './CircleItem';
 import AddButton from './AddButton';
 import ExpenseTypeData from '../../../src/models/data/ExpenseTypeData';
@@ -120,12 +121,17 @@ export default function ExpensesSection({
         visible={expenseTypeModalOpen}
         setIsVisible={setExpenseTypeModalOpen} 
         text={`What do you want to do with the expense type ${pressedExpenseType?.name}?`} 
-        firstButtonText='Update'
-        firstButtonAction={handleUpdateExpenseType}
-        secondButtonText='Delete'
-        secondButtonAction={handleDeleteActionAccepted}
-        thirdButtonText='Watch Transactions'
-        thirdButtonAction={handleWatchTransactions}/>
+        firstButtonText='Watch Transactions'
+        firstButtonAction={handleWatchTransactions}
+        firstButtonIcon={<Ionicons name="swap-horizontal-outline" size={18} color="#111827" />}
+        secondButtonText='Update'
+        secondButtonAction={handleUpdateExpenseType}
+        secondButtonIcon={<Ionicons name="create-outline" size={18} color="#111827" />}
+        thirdButtonText='Delete'
+        thirdButtonAction={handleDeleteActionAccepted}
+        thirdButtonIcon={<Ionicons name="trash-outline" size={18} color="#FFFFFF" />}
+        thirdButtonStyle={styles.deleteButton}
+        thirdButtonTextStyle={styles.deleteButtonText}/>
       
       <Modal
         visible={deleteExpenseTypeModalOpen}
@@ -164,5 +170,11 @@ const styles = StyleSheet.create({
   },
   highlightedItem: {
     opacity: 0.6,
+  },
+  deleteButton: {
+    backgroundColor: '#6B7280',
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
   },
 });

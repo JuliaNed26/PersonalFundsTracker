@@ -288,6 +288,7 @@ export default function HomeScreen() {
         sourceCurrency={sourceAccountForTransfer?.currency || Currency.UAH}
         targetCurrency={targetAccountForTransfer?.currency || Currency.UAH}
         buttonAction={submitTransferTransaction}
+        maxSourceAmount={sourceAccountForTransfer?.availableBalance}
         showNote={false}
         onClose={() => {
           setSelectedAccount(null);
@@ -304,6 +305,7 @@ export default function HomeScreen() {
         sourceCurrency={selectedAccount?.currency || Currency.UAH}
         targetCurrency={defaultCurrency}
         buttonAction={submitExpenseTransaction}
+        maxSourceAmount={selectedAccount?.availableBalance}
         showNote={true}
         onClose={() => {
           setSelectedAccount(null);

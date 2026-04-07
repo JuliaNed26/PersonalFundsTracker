@@ -1,4 +1,5 @@
 import { AccountData } from "../models/data/AccountData";
+import AccountSavingData from "../models/data/AccountSavingData";
 import AccountUpdateData from "../models/data/AccountUpdateData";
 import ExpenseTypeData from "../models/data/ExpenseTypeData";
 import { IncomeSourceData } from "../models/data/IncomeSourceData";
@@ -10,6 +11,7 @@ import { AccountUpdateEntity } from "../models/entities/AccountUpdateEntity";
 import { ExpenseTypeEntity } from "../models/entities/ExpenseTypeEntity";
 import { IncomeSourceEntity } from "../models/entities/IncomeEntity";
 import IncomeTransactionEntity from "../models/entities/IncomeTransactionEntity";
+import AccountSavingEntity from "../models/entities/AccountSavingEntity";
 import SavingGoalEntity from "../models/entities/SavingGoalEntity";
 import SavingGoalUpdateEntity from "../models/entities/SavingGoalUpdateEntity";
 import { normalizeSavingGoalName } from "./SavingGoalsNormalizationService";
@@ -20,6 +22,7 @@ export function mapAccountEntityToAccountData(account: AccountEntity) : AccountD
         id: account.id,
         name: account.name,
         balance: account.balance,
+        availableBalance: account.availableBalance,
         includeToTotalBalance: account.includeToTotalBalance,
         currency: account.currency
     } as AccountData;
@@ -31,6 +34,7 @@ export function mapAccountDataToAccountEntity(account: AccountData) : AccountEnt
         id: account.id,
         name: account.name,
         balance: account.balance,
+        availableBalance: account.availableBalance,
         includeToTotalBalance: account.includeToTotalBalance,
         currency: account.currency
     } as AccountEntity;
@@ -105,6 +109,8 @@ export function mapSavingGoalEntityToSavingGoalData(savingGoal: SavingGoalEntity
         currency: savingGoal.currency,
         monthGoal: savingGoal.monthGoal,
         totalGoal: savingGoal.totalGoal,
+        totalSaved: savingGoal.totalSaved,
+        thisMonthSaved: 0,
     } as SavingGoalData;
 }
 
@@ -116,7 +122,23 @@ export function mapSavingGoalDataToSavingGoalEntity(savingGoal: SavingGoalData):
         currency: savingGoal.currency,
         monthGoal: savingGoal.monthGoal,
         totalGoal: savingGoal.totalGoal,
+        totalSaved: savingGoal.totalSaved,
     } as SavingGoalEntity;
+}
+
+export function mapAccountSavingEntityToAccountSavingData(
+    accountSaving: AccountSavingEntity,
+    savingGoalName: string,
+    thisMonthSaved: number = 0
+): AccountSavingData {
+    return {
+        id: accountSaving.id,
+        accountId: accountSaving.accountId,
+        savingGoalId: accountSaving.savingGoalId,
+        savingGoalName,
+        balance: accountSaving.balance,
+        thisMonthSaved,
+    } as AccountSavingData;
 }
 
 export function mapSavingGoalDataToSavingGoalUpdateData(

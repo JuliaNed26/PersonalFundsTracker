@@ -1,11 +1,18 @@
-import { db } from '../index';
+import { db, type DbClient } from '../index';
 import IncomeTransactionEntity from "../../models/entities/IncomeTransactionEntity";
 import IncomeTransactionListItem from "../../models/data/IncomeTransactionListItem";
 import { accounts, incomeTransactions, incomes } from '../schema';
 import { and, desc, eq, isNull } from 'drizzle-orm';
 
-export async function addIncomeTransaction(incomeTransaction: IncomeTransactionEntity) {
-    const added = await db.insert(incomeTransactions).values({
+function getExecutor(executor: DbClient = db): DbClient {
+    return executor;
+}
+
+export function addIncomeTransaction(
+    incomeTransaction: IncomeTransactionEntity,
+    executor: DbClient = db
+) {
+    const row = getExecutor(executor).insert(incomeTransactions).values({
         incomeId: incomeTransaction.incomeId,
         accountId: incomeTransaction.accountId,
         sum: incomeTransaction.sum,
@@ -13,9 +20,7 @@ export async function addIncomeTransaction(incomeTransaction: IncomeTransactionE
         sumAddedToAccount: incomeTransaction.sumAddedToAccount,
         date: incomeTransaction.date,
         note: incomeTransaction.note
-    }).returning();
-
-    const row = Array.isArray(added) ? added[0] : added;
+    }).returning().get();
     return row as IncomeTransactionEntity;
 }
 
@@ -41,7 +46,7 @@ function buildTransactionIdentityCondition(transaction: IncomeTransactionEntity)
 }
 
 export async function getIncomeTransactionsByAccountIdAsync(accountId: number): Promise<IncomeTransactionListItem[]> {
-    const rows = await db
+    const rows = db
         .select({
             accountId: incomeTransactions.accountId,
             incomeId: incomeTransactions.incomeId,
@@ -51,13 +56,15 @@ export async function getIncomeTransactionsByAccountIdAsync(accountId: number): 
             date: incomeTransactions.date,
             note: incomeTransactions.note,
             incomeName: incomes.name,
+            accountName: accounts.name,
             accountCurrency: accounts.currency,
         })
         .from(incomeTransactions)
         .innerJoin(incomes, eq(incomeTransactions.incomeId, incomes.id))
         .innerJoin(accounts, eq(incomeTransactions.accountId, accounts.id))
         .where(eq(incomeTransactions.accountId, accountId))
-        .orderBy(desc(incomeTransactions.date));
+        .orderBy(desc(incomeTransactions.date))
+        .all();
 
     return rows.map((row) => ({
         accountId: row.accountId,
@@ -68,6 +75,42 @@ export async function getIncomeTransactionsByAccountIdAsync(accountId: number): 
         date: row.date,
         note: row.note ?? undefined,
         incomeName: row.incomeName,
+        accountName: row.accountName,
+        accountCurrency: row.accountCurrency,
+    }));
+}
+
+export async function getIncomeTransactionsByIncomeIdAsync(incomeId: number): Promise<IncomeTransactionListItem[]> {
+    const rows = db
+        .select({
+            accountId: incomeTransactions.accountId,
+            incomeId: incomeTransactions.incomeId,
+            sum: incomeTransactions.sum,
+            currency: incomeTransactions.currency,
+            sumAddedToAccount: incomeTransactions.sumAddedToAccount,
+            date: incomeTransactions.date,
+            note: incomeTransactions.note,
+            incomeName: incomes.name,
+            accountName: accounts.name,
+            accountCurrency: accounts.currency,
+        })
+        .from(incomeTransactions)
+        .innerJoin(incomes, eq(incomeTransactions.incomeId, incomes.id))
+        .innerJoin(accounts, eq(incomeTransactions.accountId, accounts.id))
+        .where(eq(incomeTransactions.incomeId, incomeId))
+        .orderBy(desc(incomeTransactions.date))
+        .all();
+
+    return rows.map((row) => ({
+        accountId: row.accountId,
+        incomeId: row.incomeId,
+        sum: row.sum,
+        currency: row.currency,
+        sumAddedToAccount: row.sumAddedToAccount ?? undefined,
+        date: row.date,
+        note: row.note ?? undefined,
+        incomeName: row.incomeName,
+        accountName: row.accountName,
         accountCurrency: row.accountCurrency,
     }));
 }
@@ -76,11 +119,19 @@ export async function updateIncomeTransactionNoteAsync(
     transaction: IncomeTransactionEntity,
     note?: string
 ): Promise<void> {
-    await db.update(incomeTransactions)
+    db.update(incomeTransactions)
         .set({ note })
-        .where(buildTransactionIdentityCondition(transaction));
+        .where(buildTransactionIdentityCondition(transaction))
+        .run();
+}
+
+export function deleteIncomeTransaction(
+    transaction: IncomeTransactionEntity,
+    executor: DbClient = db
+): void {
+    getExecutor(executor).delete(incomeTransactions).where(buildTransactionIdentityCondition(transaction)).run();
 }
 
 export async function deleteIncomeTransactionAsync(transaction: IncomeTransactionEntity): Promise<void> {
-    await db.delete(incomeTransactions).where(buildTransactionIdentityCondition(transaction));
+    deleteIncomeTransaction(transaction);
 }

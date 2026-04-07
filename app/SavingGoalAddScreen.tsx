@@ -10,6 +10,7 @@ import SavingGoalValidationResult from "../src/models/data/SavingGoalValidationR
 import { Currency } from "../src/models/enums/Currency";
 import { addSavingGoalAsync, isSavingGoalDuplicateError } from "../src/services/SavingGoalsService";
 import { validateSavingGoalData } from "../src/services/SavingGoalsValidationService";
+import { parseDotDecimalInputOrZero } from "../src/services/DotDecimalInputService";
 
 const defaultCurrency = currencyDropdownData[0]?.key ?? Currency.UAH;
 
@@ -21,11 +22,21 @@ export default function SavingGoalAddScreen() {
         currency: defaultCurrency,
         monthGoal: 0,
         totalGoal: 0,
+        totalSaved: 0,
+        thisMonthSaved: 0,
     });
+    const [monthGoalInput, setMonthGoalInput] = useState<string>("");
+    const [totalGoalInput, setTotalGoalInput] = useState<string>("");
     const [errors, setErrors] = useState<SavingGoalValidationResult>({ isValid: true });
 
     async function handleSubmit() {
-        const validationResult = validateSavingGoalData(savingGoalToAdd);
+        const nextSavingGoal = {
+            ...savingGoalToAdd,
+            monthGoal: parseDotDecimalInputOrZero(monthGoalInput),
+            totalGoal: parseDotDecimalInputOrZero(totalGoalInput),
+        };
+
+        const validationResult = validateSavingGoalData(nextSavingGoal);
         setErrors(validationResult);
 
         if (!validationResult.isValid) {
@@ -33,7 +44,7 @@ export default function SavingGoalAddScreen() {
         }
 
         try {
-            await addSavingGoalAsync(savingGoalToAdd);
+            await addSavingGoalAsync(nextSavingGoal);
             router.back();
         } catch (error) {
             if (isSavingGoalDuplicateError(error)) {
@@ -71,30 +82,24 @@ export default function SavingGoalAddScreen() {
                     <TextInputField
                         label="Per month goal"
                         placeholder="Enter sum"
-                        value={savingGoalToAdd.monthGoal === 0 ? "" : savingGoalToAdd.monthGoal.toString()}
+                        value={monthGoalInput}
                         onChangeText={(text) => {
-                            setSavingGoalToAdd((prev) => ({
-                                ...prev,
-                                monthGoal: parseFloat(text) || 0,
-                            }));
+                            setMonthGoalInput(text);
                             setErrors((prev) => ({ ...prev, monthGoalErrorMessage: undefined }));
                         }}
                         errorMessage={errors.monthGoalErrorMessage}
-                        keyboardType="decimal-pad"
+                        dotDecimalOnly
                     />
                     <TextInputField
                         label="Total goal"
                         placeholder="Enter sum"
-                        value={savingGoalToAdd.totalGoal === 0 ? "" : savingGoalToAdd.totalGoal.toString()}
+                        value={totalGoalInput}
                         onChangeText={(text) => {
-                            setSavingGoalToAdd((prev) => ({
-                                ...prev,
-                                totalGoal: parseFloat(text) || 0,
-                            }));
+                            setTotalGoalInput(text);
                             setErrors((prev) => ({ ...prev, totalGoalErrorMessage: undefined }));
                         }}
                         errorMessage={errors.totalGoalErrorMessage}
-                        keyboardType="decimal-pad"
+                        dotDecimalOnly
                     />
                 </View>
 

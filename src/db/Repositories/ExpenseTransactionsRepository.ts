@@ -1,5 +1,5 @@
 import { and, desc, eq, gte, isNull, lte } from "drizzle-orm";
-import { db } from "../index";
+import { db, type DbClient } from "../index";
 import { accounts, expenseTransactions, expenses } from "../schema";
 import ExpenseTransactionData from "../../models/data/ExpenseTransactionData";
 import ExpenseTransactionListItem from "../../models/data/ExpenseTransactionListItem";
@@ -12,17 +12,29 @@ export interface ExpenseTransactionTrendRow {
     date: string;
 }
 
-export async function addExpenseTransactionAsync(
+function getExecutor(executor: DbClient = db): DbClient {
+    return executor;
+}
+
+export function addExpenseTransaction(
     transaction: ExpenseTransactionData
-): Promise<void> {
-    await db.insert(expenseTransactions).values({
+,
+    executor: DbClient = db
+): void {
+    getExecutor(executor).insert(expenseTransactions).values({
         accountId: transaction.accountId,
         expenseId: transaction.expenseId,
         sumSent: transaction.sumSent,
         sumReceived: transaction.sumReceived,
         date: transaction.date,
         note: transaction.note,
-    });
+    }).run();
+}
+
+export async function addExpenseTransactionAsync(
+    transaction: ExpenseTransactionData
+): Promise<void> {
+    addExpenseTransaction(transaction);
 }
 
 function buildExpenseTransactionIdentityCondition(transaction: ExpenseTransactionData) {
@@ -46,7 +58,7 @@ function buildExpenseTransactionIdentityCondition(transaction: ExpenseTransactio
 export async function getExpenseTransactionsByAccountIdAsync(
     accountId: number
 ): Promise<ExpenseTransactionListItem[]> {
-    const rows = await db
+    const rows = db
         .select({
             accountId: expenseTransactions.accountId,
             expenseId: expenseTransactions.expenseId,
@@ -62,7 +74,8 @@ export async function getExpenseTransactionsByAccountIdAsync(
         .innerJoin(accounts, eq(expenseTransactions.accountId, accounts.id))
         .innerJoin(expenses, eq(expenseTransactions.expenseId, expenses.id))
         .where(eq(expenseTransactions.accountId, accountId))
-        .orderBy(desc(expenseTransactions.date));
+        .orderBy(desc(expenseTransactions.date))
+        .all();
 
     return rows.map((row) => ({
         accountId: row.accountId,
@@ -80,7 +93,7 @@ export async function getExpenseTransactionsByAccountIdAsync(
 export async function getExpenseTransactionsByExpenseIdAsync(
     expenseId: number
 ): Promise<ExpenseTransactionListItem[]> {
-    const rows = await db
+    const rows = db
         .select({
             accountId: expenseTransactions.accountId,
             expenseId: expenseTransactions.expenseId,
@@ -96,7 +109,8 @@ export async function getExpenseTransactionsByExpenseIdAsync(
         .innerJoin(accounts, eq(expenseTransactions.accountId, accounts.id))
         .innerJoin(expenses, eq(expenseTransactions.expenseId, expenses.id))
         .where(eq(expenseTransactions.expenseId, expenseId))
-        .orderBy(desc(expenseTransactions.date));
+        .orderBy(desc(expenseTransactions.date))
+        .all();
 
     return rows.map((row) => ({
         accountId: row.accountId,
@@ -115,22 +129,32 @@ export async function updateExpenseTransactionNoteAsync(
     transaction: ExpenseTransactionData,
     note?: string
 ): Promise<void> {
-    await db.update(expenseTransactions)
+    db.update(expenseTransactions)
         .set({ note })
-        .where(buildExpenseTransactionIdentityCondition(transaction));
+        .where(buildExpenseTransactionIdentityCondition(transaction))
+        .run();
+}
+
+export function deleteExpenseTransaction(
+    transaction: ExpenseTransactionData
+,
+    executor: DbClient = db
+): void {
+    getExecutor(executor).delete(expenseTransactions)
+        .where(buildExpenseTransactionIdentityCondition(transaction))
+        .run();
 }
 
 export async function deleteExpenseTransactionAsync(
     transaction: ExpenseTransactionData
 ): Promise<void> {
-    await db.delete(expenseTransactions)
-        .where(buildExpenseTransactionIdentityCondition(transaction));
+    deleteExpenseTransaction(transaction);
 }
 
 export async function getExpenseBalancesByExpenseIdAsync(): Promise<Record<number, number>> {
     const { startOfMonth, endOfMonth } = getCurrentMonthDateRange();
 
-    const rows = await db
+    const rows = db
         .select({
             expenseId: expenseTransactions.expenseId,
             sumReceived: expenseTransactions.sumReceived,
@@ -141,7 +165,8 @@ export async function getExpenseBalancesByExpenseIdAsync(): Promise<Record<numbe
                 gte(expenseTransactions.date, startOfMonth),
                 lte(expenseTransactions.date, endOfMonth)
             )
-        );
+        )
+        .all();
 
     return rows.reduce((balances, row) => {
         balances[row.expenseId] = (balances[row.expenseId] ?? 0) + row.sumReceived;
@@ -150,7 +175,7 @@ export async function getExpenseBalancesByExpenseIdAsync(): Promise<Record<numbe
 }
 
 export async function getAllExpenseTransactionsForAnalyticsAsync(): Promise<ExpenseTransactionTrendRow[]> {
-    const rows = await db
+    const rows = db
         .select({
             expenseId: expenseTransactions.expenseId,
             expenseName: expenses.name,
@@ -159,7 +184,8 @@ export async function getAllExpenseTransactionsForAnalyticsAsync(): Promise<Expe
         })
         .from(expenseTransactions)
         .innerJoin(expenses, eq(expenseTransactions.expenseId, expenses.id))
-        .orderBy(desc(expenseTransactions.date));
+        .orderBy(desc(expenseTransactions.date))
+        .all();
 
     return rows.map((row) => ({
         expenseId: row.expenseId,

@@ -1,4 +1,14 @@
-import { ModalProps, Modal as RNModal, Pressable, StyleSheet, Text, View } from "react-native";
+import type { ReactNode } from "react";
+import {
+    ModalProps,
+    Modal as RNModal,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+    type ViewStyle,
+    type TextStyle,
+} from "react-native";
 
 type Props = ModalProps & {
     visible: boolean;
@@ -10,6 +20,20 @@ type Props = ModalProps & {
     secondButtonAction: () => void;
     thirdButtonText?: string;
     thirdButtonAction?: () => void;
+    fourthButtonText?: string;
+    fourthButtonAction?: () => void;
+    firstButtonIcon?: ReactNode;
+    secondButtonIcon?: ReactNode;
+    thirdButtonIcon?: ReactNode;
+    fourthButtonIcon?: ReactNode;
+    firstButtonStyle?: ViewStyle;
+    secondButtonStyle?: ViewStyle;
+    thirdButtonStyle?: ViewStyle;
+    fourthButtonStyle?: ViewStyle;
+    firstButtonTextStyle?: TextStyle;
+    secondButtonTextStyle?: TextStyle;
+    thirdButtonTextStyle?: TextStyle;
+    fourthButtonTextStyle?: TextStyle;
 };
 
 export default function Modal({
@@ -22,7 +46,56 @@ export default function Modal({
     secondButtonAction,
     thirdButtonText,
     thirdButtonAction,
+    fourthButtonText,
+    fourthButtonAction,
+    firstButtonIcon,
+    secondButtonIcon,
+    thirdButtonIcon,
+    fourthButtonIcon,
+    firstButtonStyle,
+    secondButtonStyle,
+    thirdButtonStyle,
+    fourthButtonStyle,
+    firstButtonTextStyle,
+    secondButtonTextStyle,
+    thirdButtonTextStyle,
+    fourthButtonTextStyle,
 }: Props) {
+    const buttons = [
+        {
+            text: firstButtonText,
+            action: firstButtonAction,
+            icon: firstButtonIcon,
+            buttonStyle: firstButtonStyle,
+            textStyle: firstButtonTextStyle,
+        },
+        {
+            text: secondButtonText,
+            action: secondButtonAction,
+            icon: secondButtonIcon,
+            buttonStyle: secondButtonStyle,
+            textStyle: secondButtonTextStyle,
+        },
+        thirdButtonText && thirdButtonAction
+            ? {
+                text: thirdButtonText,
+                action: thirdButtonAction,
+                icon: thirdButtonIcon,
+                buttonStyle: thirdButtonStyle,
+                textStyle: thirdButtonTextStyle,
+            }
+            : null,
+        fourthButtonText && fourthButtonAction
+            ? {
+                text: fourthButtonText,
+                action: fourthButtonAction,
+                icon: fourthButtonIcon,
+                buttonStyle: fourthButtonStyle,
+                textStyle: fourthButtonTextStyle,
+            }
+            : null,
+    ].filter((button): button is NonNullable<typeof button> => button !== null);
+
     return (
         <RNModal
             visible={visible}
@@ -41,17 +114,17 @@ export default function Modal({
                     </View>
                     {text ? <Text style={style.mainText}>{text}</Text> : null}
                     <View style={style.buttonsContainer}>
-                        <Pressable style={style.button} onPress={firstButtonAction}>
-                            <Text style={style.buttonText}>{firstButtonText}</Text>
-                        </Pressable>
-                        <Pressable style={style.button} onPress={secondButtonAction}>
-                            <Text style={style.buttonText}>{secondButtonText}</Text>
-                        </Pressable>
-                        {thirdButtonText && thirdButtonAction ? (
-                            <Pressable style={style.button} onPress={thirdButtonAction}>
-                                <Text style={style.buttonText}>{thirdButtonText}</Text>
+                        {buttons.map((button) => (
+                            <Pressable
+                                key={button.text}
+                                style={[style.button, button.buttonStyle]}
+                                onPress={button.action}>
+                                <View style={style.buttonContent}>
+                                    {button.icon ? <View style={style.iconWrapper}>{button.icon}</View> : null}
+                                    <Text style={[style.buttonText, button.textStyle]}>{button.text}</Text>
+                                </View>
                             </Pressable>
-                        ) : null}
+                        ))}
                     </View>
                 </View>
             </View>
@@ -104,12 +177,22 @@ const style = StyleSheet.create({
     button: {
         display: "flex",
         justifyContent: "center",
-        alignContent: "center",
         width: "80%",
         height: 50,
         borderRadius: 12,
         backgroundColor: "#E0F07D",
         marginVertical: 6,
+        paddingHorizontal: 16,
+    },
+    buttonContent: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+    },
+    iconWrapper: {
+        width: 20,
+        alignItems: "center",
     },
     buttonText: {
         textAlign: "center",

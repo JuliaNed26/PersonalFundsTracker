@@ -21,8 +21,6 @@ type SavingGoalGroup = {
     savingGoals: SavingGoalData[];
 };
 
-const EMPTY_SAVED_AMOUNT = 0;
-
 function groupSavingGoalsByCurrency(savingGoals: SavingGoalData[]): SavingGoalGroup[] {
     const groupedSavingGoals = new Map<number, SavingGoalData[]>();
     const sortedSavingGoals = [...savingGoals].sort((leftGoal, rightGoal) => {
@@ -228,13 +226,13 @@ export default function SavingGoalsScreen() {
 
                                         <ProgressBarRow
                                             label="This month"
-                                            savedAmount={EMPTY_SAVED_AMOUNT}
+                                            savedAmount={savingGoal.thisMonthSaved}
                                             goalAmount={savingGoal.monthGoal}
                                             currency={savingGoal.currency}
                                         />
                                         <ProgressBarRow
                                             label="Total"
-                                            savedAmount={EMPTY_SAVED_AMOUNT}
+                                            savedAmount={savingGoal.totalSaved}
                                             goalAmount={savingGoal.totalGoal}
                                             currency={savingGoal.currency}
                                         />

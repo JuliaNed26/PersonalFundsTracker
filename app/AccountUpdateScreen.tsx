@@ -6,10 +6,18 @@ import TextInputField from "./components/TextInputField";
 import SubmitButton from "./components/SubmitButton";
 import { AccountFormErrors } from "./AccountFormScreens/Errors";
 import Toggle from "./components/Toggle";
-import { getAccountAsync, updateAccountAsync } from "../src/services/AccountService";
+import {
+    getAccountAsync,
+    isAccountBalanceBelowSavedAmountError,
+    updateAccountAsync,
+} from "../src/services/AccountService";
 import AccountUpdateData from "../src/models/data/AccountUpdateData";
 import { mapAccountDataToAccountUpdateEntity } from "../src/services/MapService";
 import { validateAccountUpdateData } from "../src/services/AccountValidationService";
+import {
+    formatDotDecimalInput,
+    parseDotDecimalInputOrZero,
+} from "../src/services/DotDecimalInputService";
 
 
 export default function AccountUpdateScreen() {
@@ -21,6 +29,7 @@ export default function AccountUpdateScreen() {
         balance: 0,
         includeToTotalBalance: true,
     } as AccountUpdateData);
+    const [balanceInput, setBalanceInput] = useState<string>("0");
     const [errors, setErrors] = useState<AccountFormErrors>({});
 
     useEffect(() => {
@@ -32,24 +41,40 @@ export default function AccountUpdateScreen() {
         
         (async () => {
             var account = await getAccountAsync(accountId); 
-            setAccountToUpdate(mapAccountDataToAccountUpdateEntity(account)); 
+            const mappedAccount = mapAccountDataToAccountUpdateEntity(account);
+            setAccountToUpdate(mappedAccount);
+            setBalanceInput(formatDotDecimalInput(mappedAccount.balance));
         })();
     }, [accountIdParam]);
 
     async function handleSubmit() {
-        var isValid = validate();
+        const nextAccount = {
+            ...accountToUpdate,
+            balance: parseDotDecimalInputOrZero(balanceInput),
+        };
+
+        var isValid = validate(nextAccount);
         if (!isValid) 
         {
             return;
         }
         
-        await updateAccountAsync(accountToUpdate); 
+        try {
+            await updateAccountAsync(nextAccount); 
+        } catch (error) {
+            if (isAccountBalanceBelowSavedAmountError(error)) {
+                setErrors((prev) => ({ ...prev, balanceErrorMessage: error.message }));
+                return;
+            }
+
+            throw error;
+        }
 
         router.back();
     }
 
-    function validate() : boolean {
-        const validationResult = validateAccountUpdateData(accountToUpdate);
+    function validate(account: AccountUpdateData) : boolean {
+        const validationResult = validateAccountUpdateData(account);
         if (validationResult.isValid) {
             return true;
         }
@@ -78,9 +103,13 @@ export default function AccountUpdateScreen() {
                         errorMessage={errors.nameErrorMessage}/>
                     <TextInputField 
                         label="Balance" 
-                        placeholder={accountToUpdate.balance.toString()}
-                        value={accountToUpdate.balance.toString()}
-                        onChangeText={(text) => setAccountToUpdate((prev) => ({ ...prev, balance: parseFloat(text) || 0 }))}
+                        placeholder={formatDotDecimalInput(accountToUpdate.balance)}
+                        value={balanceInput}
+                        onChangeText={(text) => {
+                            setBalanceInput(text);
+                            setErrors((prev) => ({ ...prev, balanceErrorMessage: undefined }));
+                        }}
+                        dotDecimalOnly
                         errorMessage={errors.balanceErrorMessage}/>
                     <Toggle 
                         value={accountToUpdate.includeToTotalBalance}

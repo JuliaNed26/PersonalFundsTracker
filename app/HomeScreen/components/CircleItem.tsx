@@ -4,13 +4,21 @@ import { currencyMap } from '../../../src/models/constants/CurrencyList';
 interface CircleItemProps {
   name: string;
   balance?: number;
+  secondaryBalance?: number;
   currency?: number;
   color: 'green' | 'orange' | 'gray' | 'red' | 'darkGreen' | 'darkOrange' | 'darkGray';
   showLimit?: boolean;
   limit?: number;
 }
 
-export default function CircleItem({ name, balance, currency, color, showLimit, limit }: CircleItemProps) {
+function formatBalance(balance: number, currency?: number): string {
+  return `${balance.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} ${currency !== undefined && currencyMap.get(currency) || ''}`;
+}
+
+export default function CircleItem({ name, balance, secondaryBalance, currency, color, showLimit, limit }: CircleItemProps) {
   const colorStyle = {
     green: styles.circleGreen,
     orange: styles.circleOrange,
@@ -42,12 +50,16 @@ export default function CircleItem({ name, balance, currency, color, showLimit, 
       <Text style={styles.name}>{name}</Text>
 
       {balance !== undefined && (
-        <Text style={styles.balance}>
-          {`${balance.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })} ${currency !== undefined && currencyMap.get(currency) || ''}`}
-        </Text>
+        secondaryBalance !== undefined ? (
+          <View style={styles.balanceContainer}>
+            <Text style={styles.balance}>{`Available: ${formatBalance(balance, currency)}`}</Text>
+            <Text style={styles.secondaryBalance}>{`Total: ${formatBalance(secondaryBalance, currency)}`}</Text>
+          </View>
+        ) : (
+          <Text style={styles.balance}>
+            {formatBalance(balance, currency)}
+          </Text>
+        )
       )}
 
       {showLimit && limit !== undefined && <Text style={styles.limit}>{limit}</Text>}
@@ -125,6 +137,15 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#111827',
+  },
+  balanceContainer: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  secondaryBalance: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#4B5563',
   },
   limit: {
     fontSize: 10,

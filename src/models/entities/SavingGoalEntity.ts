@@ -5,4 +5,5 @@ export default interface SavingGoalEntity {
     currency: number;
     monthGoal: number;
     totalGoal: number;
+    totalSaved: number;
 }

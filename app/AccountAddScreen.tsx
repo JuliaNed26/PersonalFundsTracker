@@ -1,6 +1,5 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { AccountEntity } from "../src/models/entities/AccountEntity";
 import { StyleSheet, View } from "react-native";
 import HeaderForEditScreens from "./components/HeaderForEditScreens";
 import TextInputField from "./components/TextInputField";
@@ -12,6 +11,7 @@ import Toggle from "./components/Toggle";
 import { addAccountAsync } from "../src/services/AccountService";
 import { AccountData } from "../src/models/data/AccountData";
 import { validateAccountData } from "../src/services/AccountValidationService";
+import { parseDotDecimalInputOrZero } from "../src/services/DotDecimalInputService";
 
 export default function AccountAddScreen() {
     const router = useRouter();
@@ -20,24 +20,31 @@ export default function AccountAddScreen() {
         name: "",
         currency: 0,
         balance: 0,
+        availableBalance: 0,
         includeToTotalBalance: true,
     } as AccountData);
+    const [balanceInput, setBalanceInput] = useState<string>("0");
     const [errors, setErrors] = useState<AccountFormErrors>({});
 
     async function handleSubmit() {
-        var isValid = validate();
+        const nextAccount = {
+            ...accountToAdd,
+            balance: parseDotDecimalInputOrZero(balanceInput),
+        };
+
+        var isValid = validate(nextAccount);
         if (!isValid) 
         {
             return;
         }
 
-        await addAccountAsync(accountToAdd); 
+        await addAccountAsync(nextAccount); 
         
         router.back();
     }
 
-    function validate() : boolean {
-        const validationResult = validateAccountData(accountToAdd);
+    function validate(account: AccountData) : boolean {
+        const validationResult = validateAccountData(account);
         if (validationResult.isValid) {
             return true;
         }
@@ -67,8 +74,12 @@ export default function AccountAddScreen() {
                     <TextInputField 
                         label="Balance" 
                         placeholder="0"
-                        value={accountToAdd.balance.toString()}
-                        onChangeText={(text) => setAccountToAdd((prev) => ({ ...prev, balance: parseFloat(text) || 0 }))}
+                        value={balanceInput}
+                        onChangeText={(text) => {
+                            setBalanceInput(text);
+                            setErrors((prev) => ({ ...prev, balanceErrorMessage: undefined }));
+                        }}
+                        dotDecimalOnly
                         errorMessage={errors.balanceErrorMessage}/>
                     <DropdownList
                         data={currencyDropdownData}

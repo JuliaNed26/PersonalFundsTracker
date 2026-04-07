@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
 import CircleItem from './CircleItem';
 import AddButton from './AddButton';
 import { AccountData } from '../../../src/models/data/AccountData';
@@ -63,6 +64,18 @@ export default function AccountsSection({ accounts, onRefresh, setSelectedAccoun
     });
   }
 
+  async function handleWatchSavings() {
+    if (!pressedAccount) {
+      return;
+    }
+
+    setAccountsModalOpen(false);
+    router.push({
+      pathname: '/AccountSavingsScreen',
+      params: { accountId: pressedAccount.id }
+    });
+  }
+
   function handleAccountPress(account: AccountData) {
     if (selectedAccount?.id === account.id)
     {
@@ -94,7 +107,8 @@ export default function AccountsSection({ accounts, onRefresh, setSelectedAccoun
             style={selectedAccount?.id === account.id ? styles.highlightedItem : null}>
             <CircleItem
               name={account.name}
-              balance={account.balance}
+              balance={account.availableBalance}
+              secondaryBalance={account.balance}
               currency={account.currency}
               color="orange"
             />
@@ -109,12 +123,20 @@ export default function AccountsSection({ accounts, onRefresh, setSelectedAccoun
         visible={accountsModalOpen}
         setIsVisible={setAccountsModalOpen} 
         text={`What do you want to do with the account ${pressedAccount?.name}?`} 
-        firstButtonText='Update'
-        firstButtonAction={handleUpdateAccount}
-        secondButtonText='Delete'
-        secondButtonAction={handleDeleteActionAccepted}
-        thirdButtonText='Watch Transactions'
-        thirdButtonAction={handleWatchTransactions}/>
+        firstButtonText='Watch Savings'
+        firstButtonAction={handleWatchSavings}
+        firstButtonIcon={<Ionicons name="wallet-outline" size={18} color="#111827" />}
+        secondButtonText='Watch Transactions'
+        secondButtonAction={handleWatchTransactions}
+        secondButtonIcon={<Ionicons name="swap-horizontal-outline" size={18} color="#111827" />}
+        thirdButtonText='Update'
+        thirdButtonAction={handleUpdateAccount}
+        thirdButtonIcon={<Ionicons name="create-outline" size={18} color="#111827" />}
+        fourthButtonText='Delete'
+        fourthButtonAction={handleDeleteActionAccepted}
+        fourthButtonIcon={<Ionicons name="trash-outline" size={18} color="#FFFFFF" />}
+        fourthButtonStyle={styles.deleteButton}
+        fourthButtonTextStyle={styles.deleteButtonText}/>
       
       <Modal
         visible={deleteAccountModalOpen}
@@ -161,5 +183,11 @@ const styles = StyleSheet.create({
   },
   highlightedItem: {
     opacity: 0.6,
+  },
+  deleteButton: {
+    backgroundColor: '#6B7280',
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
   },
 });

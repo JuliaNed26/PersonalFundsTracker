@@ -11,6 +11,7 @@ export const accounts = sqliteTable('accounts', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull().unique(),
   balance: real('balance').notNull().default(0),
+  availableBalance: real('availableBalance').notNull().default(0),
   currency: integer('currency').notNull(),
   includeToTotalBalance: integer('includeToTotalBalance', {mode: 'boolean'}).notNull().default(true),
 });
@@ -81,6 +82,7 @@ export const savingGoals = sqliteTable(
     currency: integer('currency').notNull(),
     monthGoal: real('monthGoal').notNull(),
     totalGoal: real('totalGoal').notNull(),
+    totalSaved: real('totalSaved').notNull().default(0),
   },
   (table) => ({
     normalizedNameCurrencyUnique: unique('savingGoals_normalizedName_currency_unique').on(
@@ -89,6 +91,35 @@ export const savingGoals = sqliteTable(
     ),
   })
 );
+
+export const accountSavings = sqliteTable(
+  'accountSavings',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    accountId: integer('accountId')
+      .notNull()
+      .references(() => accounts.id),
+    savingGoalId: integer('savingGoalId')
+      .notNull()
+      .references(() => savingGoals.id),
+    balance: real('balance').notNull().default(0),
+  },
+  (table) => ({
+    accountGoalUnique: unique('accountSavings_account_goal_unique').on(
+      table.accountId,
+      table.savingGoalId
+    ),
+  })
+);
+
+export const savingTransactions = sqliteTable('savingTransactions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  accountSavingId: integer('accountSavingId')
+    .notNull()
+    .references(() => accountSavings.id),
+  sum: real('sum').notNull(),
+  date: text('date').notNull(),
+});
 
 export const incomesRelations = relations(incomes, ({ many }) => ({
   transactions: many(incomeTransactions)
@@ -116,3 +147,5 @@ export type Income = typeof incomes.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
 export type Expense = typeof expenses.$inferSelect;
 export type SavingGoal = typeof savingGoals.$inferSelect;
+export type AccountSaving = typeof accountSavings.$inferSelect;
+export type SavingTransaction = typeof savingTransactions.$inferSelect;

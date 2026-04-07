@@ -3,11 +3,14 @@ import IncomeTransactionEntity from '../models/entities/IncomeTransactionEntity'
 import IncomeTransactionListItem from '../models/data/IncomeTransactionListItem';
 import {
   addIncomeTransaction,
+  deleteIncomeTransaction,
   deleteIncomeTransactionAsync as deleteIncomeTransactionFromDbAsync,
   getIncomeTransactionsByAccountIdAsync,
+  getIncomeTransactionsByIncomeIdAsync,
   updateIncomeTransactionNoteAsync as updateIncomeTransactionNoteInDbAsync
 } from '../db/Repositories/IncomeTransactionsRepository';
-import { updateAccountBalanceAsync } from '../db/Repositories/AccountRepositiory';
+import { db } from '../db';
+import { getAccountById, updateAccountBalances } from '../db/Repositories/AccountRepositiory';
 import { mapIncomeTransactionDataToIncomeTransactionEntity } from './MapService';
 import { AccountData } from '../models/data/AccountData';
 import { getAccountAsync } from './AccountService';
@@ -15,7 +18,7 @@ import { convertSumToCurrencyAsync } from './ExchangeRateService';
 
 export async function addIncomeTransactionAsync(
   transaction: IncomeTransactionData,
-  account: AccountData,
+  _account: AccountData,
   sumAddToAccount: number
 ): Promise<void> {
   const transactionEntity: IncomeTransactionEntity = mapIncomeTransactionDataToIncomeTransactionEntity({
@@ -23,11 +26,20 @@ export async function addIncomeTransactionAsync(
     sumAddedToAccount: sumAddToAccount,
   });
 
-  // Add the income transaction
-  await addIncomeTransaction(transactionEntity);
+  db.transaction((tx) => {
+    const account = getAccountById(transaction.accountId, tx);
+    if (!account) {
+      throw new Error(`Account with id ${transaction.accountId} not found`);
+    }
 
-  // Update account balance
-  await updateAccountBalanceAsync(transaction.accountId, account.balance + sumAddToAccount);
+    addIncomeTransaction(transactionEntity, tx);
+    updateAccountBalances(
+      transaction.accountId,
+      account.balance + sumAddToAccount,
+      account.availableBalance + sumAddToAccount,
+      tx
+    );
+  });
 }
 
 export async function getIncomeTransactionsForAccountAsync(accountId: number): Promise<IncomeTransactionListItem[]> {
@@ -59,6 +71,10 @@ export async function getIncomeTransactionsForAccountAsync(accountId: number): P
   return enriched;
 }
 
+export async function getIncomeTransactionsForIncomeAsync(incomeId: number): Promise<IncomeTransactionListItem[]> {
+  return getIncomeTransactionsByIncomeIdAsync(incomeId);
+}
+
 export async function updateIncomeTransactionNoteAsync(
   transaction: IncomeTransactionData,
   note?: string
@@ -76,6 +92,13 @@ export async function deleteIncomeTransactionAsync(transaction: IncomeTransactio
     sumToSubtract = await convertSumToCurrencyAsync(transaction.sum, transaction.currency, account.currency);
   }
 
-  await deleteIncomeTransactionFromDbAsync(transactionEntity);
-  await updateAccountBalanceAsync(transaction.accountId, account.balance - sumToSubtract);
+  db.transaction((tx) => {
+    deleteIncomeTransaction(transactionEntity, tx);
+    updateAccountBalances(
+      transaction.accountId,
+      account.balance - sumToSubtract,
+      account.availableBalance - sumToSubtract,
+      tx
+    );
+  });
 }

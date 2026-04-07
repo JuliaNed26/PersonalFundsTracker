@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
 import CircleItem from './CircleItem';
 import AddButton from './AddButton';
 import { IncomeSourceData } from '../../../src/models/data/IncomeSourceData';
@@ -56,6 +57,18 @@ export default function IncomeSection({ incomes, onRefresh, setSelectedIncome, s
     });
   }
 
+  async function handleWatchTransactions() {
+    if (!incomeToEdit) {
+      return;
+    }
+
+    setIncomesModalOpen(false);
+    router.push({
+      pathname: '/IncomeTransactionsScreen',
+      params: { incomeId: incomeToEdit.id }
+    });
+  }
+
   function handleIncomePress(income: IncomeSourceData) {
     if (selectedIncome?.id === income.id)
     {
@@ -97,10 +110,17 @@ export default function IncomeSection({ incomes, onRefresh, setSelectedIncome, s
         visible={incomesModalOpen}
         setIsVisible={setIncomesModalOpen} 
         text={`What do you want to do with the income source ${incomeToEdit?.name}?`} 
-        firstButtonText='Update'
-        firstButtonAction={handleUpdateIncome}
-        secondButtonText='Delete'
-        secondButtonAction={handleDeleteActionAccepted}/>
+        firstButtonText='Watch Transactions'
+        firstButtonAction={handleWatchTransactions}
+        firstButtonIcon={<Ionicons name="swap-horizontal-outline" size={18} color="#111827" />}
+        secondButtonText='Update'
+        secondButtonAction={handleUpdateIncome}
+        secondButtonIcon={<Ionicons name="create-outline" size={18} color="#111827" />}
+        thirdButtonText='Delete'
+        thirdButtonAction={handleDeleteActionAccepted}
+        thirdButtonIcon={<Ionicons name="trash-outline" size={18} color="#FFFFFF" />}
+        thirdButtonStyle={styles.deleteButton}
+        thirdButtonTextStyle={styles.deleteButtonText}/>
       
       <Modal
         visible={deleteIncomeModalOpen}
@@ -147,5 +167,11 @@ const styles = StyleSheet.create({
   },
   highlightedItem: {
     opacity: 0.6,
+  },
+  deleteButton: {
+    backgroundColor: '#6B7280',
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
   },
 });

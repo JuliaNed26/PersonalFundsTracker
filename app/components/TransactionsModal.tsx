@@ -5,6 +5,7 @@ import { validateTransactionData } from "../../src/services/TransactionValidatio
 import TransactionValidationResult from "../../src/models/data/TransactionValidationResult";
 import { convertSumToCurrencyAsync } from "../../src/services/ExchangeRateService";
 import { currencyMap } from "../../src/models/constants/CurrencyList";
+import { parseDotDecimalInput } from "../../src/services/DotDecimalInputService";
 
 type Props = {
     visible: boolean,
@@ -16,6 +17,7 @@ type Props = {
     buttonAction: (transferredSum: number,sumAddToAccount: number, note?: string) => void | Promise<void>,
     showNote?: boolean,
     onClose?: () => void,
+    maxSourceAmount?: number,
 }
 
 export default function TransactionsModal({
@@ -27,7 +29,8 @@ export default function TransactionsModal({
     targetCurrency,
     buttonAction,
     showNote = true,
-    onClose}: Props) {
+    onClose,
+    maxSourceAmount}: Props) {
     
     const [transactionSum, setTransactionSum] = useState('');
     const [sumAddToAccount, setSumAddToAccount] = useState('');
@@ -36,6 +39,8 @@ export default function TransactionsModal({
 
     let sourceCurrencyLabel = currencyMap.get(sourceCurrency) || '';
     let targetCurrencyLabel = currencyMap.get(targetCurrency) || '';
+
+    const clearErrors = () => setErrors({ isValid: true });
 
     const handleClose = () => {
         setIsVisible(false);
@@ -48,19 +53,15 @@ export default function TransactionsModal({
     
     async function handleSourceSumChange(value: string): Promise<void> {
         setTransactionSum(value);
+        clearErrors();
 
         if (sourceCurrency === targetCurrency) {
             setSumAddToAccount(value);
             return;
         }
 
-        if (!value) {
-            setSumAddToAccount('');
-            return;
-        }
-
-        const numericValue = parseFloat(value);
-        if (Number.isNaN(numericValue)) {
+        const numericValue = parseDotDecimalInput(value);
+        if (numericValue === null) {
             setSumAddToAccount('');
             return;
         }
@@ -75,19 +76,15 @@ export default function TransactionsModal({
 
     async function handleTargetSumChange(value: string): Promise<void> {
         setSumAddToAccount(value);
+        clearErrors();
 
         if (sourceCurrency === targetCurrency) {
             setTransactionSum(value);
             return;
         }
 
-        if (!value) {
-            setTransactionSum('');
-            return;
-        }
-
-        const numericValue = parseFloat(value);
-        if (Number.isNaN(numericValue)) {
+        const numericValue = parseDotDecimalInput(value);
+        if (numericValue === null) {
             setTransactionSum('');
             return;
         }
@@ -108,6 +105,15 @@ export default function TransactionsModal({
             setErrors(validationResult);
             return;
         }
+
+        if (maxSourceAmount !== undefined && parsedTransferredSum > maxSourceAmount) {
+            setErrors({
+                isValid: false,
+                transferredSumErrorMessage: "Insufficient available balance",
+            });
+            return;
+        }
+
         await buttonAction(parsedTransferredSum, parsedSumAddToAccount, showNote ? note : undefined);
         setTransactionSum('');
         setSumAddToAccount('');
@@ -135,20 +141,20 @@ export default function TransactionsModal({
                     <TextInputField
                         label={`Sum ${sourceCurrencyLabel}:`}
                         placeholder="0.00" 
-                        keyboardType="numeric" 
                         value={transactionSum}
                         errorMessage={errors.transferredSumErrorMessage}
                         onChangeText={handleSourceSumChange}
+                        dotDecimalOnly
                     />
                     {
                         targetCurrency != sourceCurrency
                         ? <TextInputField
                             label={`Sum ${targetCurrencyLabel}:`}
                             placeholder="0.00"
-                            keyboardType="numeric" 
                             value={sumAddToAccount}
                             errorMessage={errors.sumAddToAccountErrorMessage}
                             onChangeText={handleTargetSumChange}
+                            dotDecimalOnly
                         />
                         : null
                     }

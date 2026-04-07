@@ -12,6 +12,10 @@ import {
     updateSavingGoalAsync,
 } from "../src/services/SavingGoalsService";
 import { validateSavingGoalUpdateData } from "../src/services/SavingGoalsValidationService";
+import {
+    formatDotDecimalInput,
+    parseDotDecimalInputOrZero,
+} from "../src/services/DotDecimalInputService";
 
 export default function SavingGoalUpdateScreen() {
     const router = useRouter();
@@ -23,6 +27,8 @@ export default function SavingGoalUpdateScreen() {
         monthGoal: 0,
         totalGoal: 0,
     });
+    const [monthGoalInput, setMonthGoalInput] = useState<string>("");
+    const [totalGoalInput, setTotalGoalInput] = useState<string>("");
     const [errors, setErrors] = useState<SavingGoalValidationResult>({ isValid: true });
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -35,7 +41,10 @@ export default function SavingGoalUpdateScreen() {
             try {
                 setIsLoading(true);
                 const savingGoal = await getSavingGoalAsync(savingGoalId);
-                setSavingGoalToUpdate(mapSavingGoalDataToSavingGoalUpdateData(savingGoal));
+                const mappedSavingGoal = mapSavingGoalDataToSavingGoalUpdateData(savingGoal);
+                setSavingGoalToUpdate(mappedSavingGoal);
+                setMonthGoalInput(formatDotDecimalInput(mappedSavingGoal.monthGoal, true));
+                setTotalGoalInput(formatDotDecimalInput(mappedSavingGoal.totalGoal, true));
             } finally {
                 setIsLoading(false);
             }
@@ -43,7 +52,13 @@ export default function SavingGoalUpdateScreen() {
     }, [savingGoalId]);
 
     async function handleSubmit() {
-        const validationResult = validateSavingGoalUpdateData(savingGoalToUpdate);
+        const nextSavingGoal = {
+            ...savingGoalToUpdate,
+            monthGoal: parseDotDecimalInputOrZero(monthGoalInput),
+            totalGoal: parseDotDecimalInputOrZero(totalGoalInput),
+        };
+
+        const validationResult = validateSavingGoalUpdateData(nextSavingGoal);
         setErrors(validationResult);
 
         if (!validationResult.isValid) {
@@ -51,7 +66,7 @@ export default function SavingGoalUpdateScreen() {
         }
 
         try {
-            await updateSavingGoalAsync(savingGoalToUpdate);
+            await updateSavingGoalAsync(nextSavingGoal);
             router.back();
         } catch (error) {
             if (isSavingGoalDuplicateError(error)) {
@@ -94,38 +109,24 @@ export default function SavingGoalUpdateScreen() {
                         <TextInputField
                             label="Per month goal"
                             placeholder="Enter sum"
-                            value={
-                                savingGoalToUpdate.monthGoal === 0
-                                    ? ""
-                                    : savingGoalToUpdate.monthGoal.toString()
-                            }
+                            value={monthGoalInput}
                             onChangeText={(text) => {
-                                setSavingGoalToUpdate((prev) => ({
-                                    ...prev,
-                                    monthGoal: parseFloat(text) || 0,
-                                }));
+                                setMonthGoalInput(text);
                                 setErrors((prev) => ({ ...prev, monthGoalErrorMessage: undefined }));
                             }}
                             errorMessage={errors.monthGoalErrorMessage}
-                            keyboardType="decimal-pad"
+                            dotDecimalOnly
                         />
                         <TextInputField
                             label="Total goal"
                             placeholder="Enter sum"
-                            value={
-                                savingGoalToUpdate.totalGoal === 0
-                                    ? ""
-                                    : savingGoalToUpdate.totalGoal.toString()
-                            }
+                            value={totalGoalInput}
                             onChangeText={(text) => {
-                                setSavingGoalToUpdate((prev) => ({
-                                    ...prev,
-                                    totalGoal: parseFloat(text) || 0,
-                                }));
+                                setTotalGoalInput(text);
                                 setErrors((prev) => ({ ...prev, totalGoalErrorMessage: undefined }));
                             }}
                             errorMessage={errors.totalGoalErrorMessage}
-                            keyboardType="decimal-pad"
+                            dotDecimalOnly
                         />
                     </View>
                 )}

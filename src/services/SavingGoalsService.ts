@@ -1,4 +1,7 @@
 import {
+    deleteSavingGoal,
+    getAllSavingGoals,
+    getSavingGoalById,
     deleteSavingGoalAsync as deleteSavingGoalFromDbAsync,
     getAllSavingGoalsAsync,
     getSavingGoalByIdAsync,
@@ -7,9 +10,13 @@ import {
     insertSavingGoalAsync,
     updateSavingGoalAsync as updateSavingGoalInDbAsync,
 } from "../db/Repositories/SavingGoalsRepository";
+import { db } from "../db";
 import { currencyMap } from "../models/constants/CurrencyList";
 import SavingGoalData from "../models/data/SavingGoalData";
 import SavingGoalUpdateData from "../models/data/SavingGoalUpdateData";
+import { getAccountById, updateAccountAvailableBalance } from "../db/Repositories/AccountRepositiory";
+import { deleteAccountSaving, getAccountSavingsByGoalId } from "../db/Repositories/AccountSavingsRepository";
+import { deleteSavingTransactionsByAccountSavingId, getCurrentMonthSavingTotalsByGoalIds } from "../db/Repositories/SavingTransactionsRepository";
 import {
     mapSavingGoalDataToSavingGoalEntity,
     mapSavingGoalEntityToSavingGoalData,
@@ -39,13 +46,21 @@ export async function getSavingGoalAsync(id: number): Promise<SavingGoalData> {
         throw new Error(`Saving goal with id ${id} not found`);
     }
 
-    return mapSavingGoalEntityToSavingGoalData(savingGoal);
+    const monthlyTotals = getCurrentMonthSavingTotalsByGoalIds([id]);
+    return {
+        ...mapSavingGoalEntityToSavingGoalData(savingGoal),
+        thisMonthSaved: monthlyTotals[id] ?? 0,
+    };
 }
 
 export async function getSavingGoalsAsync(): Promise<SavingGoalData[]> {
     const savingGoals = await getAllSavingGoalsAsync();
+    const monthlyTotals = getCurrentMonthSavingTotalsByGoalIds(savingGoals.map((goal) => goal.id));
 
-    return savingGoals.map(mapSavingGoalEntityToSavingGoalData);
+    return savingGoals.map((savingGoal) => ({
+        ...mapSavingGoalEntityToSavingGoalData(savingGoal),
+        thisMonthSaved: monthlyTotals[savingGoal.id] ?? 0,
+    }));
 }
 
 export async function getSavingGoalsByCurrencyAsync(currency: number): Promise<SavingGoalData[]> {
@@ -100,7 +115,29 @@ export async function updateSavingGoalAsync(
 }
 
 export async function deleteSavingGoalAsync(id: number): Promise<void> {
-    await deleteSavingGoalFromDbAsync(id);
+    db.transaction((tx) => {
+        const savingGoal = getSavingGoalById(id, tx);
+        if (!savingGoal) {
+            throw new Error(`Saving goal with id ${id} not found`);
+        }
+
+        const linkedSavings = getAccountSavingsByGoalId(id, tx);
+        for (const linkedSaving of linkedSavings) {
+            const account = getAccountById(linkedSaving.accountId, tx);
+            if (account) {
+                updateAccountAvailableBalance(
+                    account.id,
+                    account.availableBalance + linkedSaving.balance,
+                    tx
+                );
+            }
+
+            deleteSavingTransactionsByAccountSavingId(linkedSaving.id, tx);
+            deleteAccountSaving(linkedSaving.id, tx);
+        }
+
+        deleteSavingGoal(id, tx);
+    });
 }
 
 async function ensureSavingGoalUniqueAsync(

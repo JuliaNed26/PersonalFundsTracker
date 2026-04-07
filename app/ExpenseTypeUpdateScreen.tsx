@@ -8,6 +8,10 @@ import { StyleSheet, View } from "react-native";
 import HeaderForEditScreens from "./components/HeaderForEditScreens";
 import TextInputField from "./components/TextInputField";
 import SubmitButton from "./components/SubmitButton";
+import {
+    formatDotDecimalInput,
+    parseDotDecimalInputOrZero,
+} from "../src/services/DotDecimalInputService";
 
 export default function ExpenseTypeUpdateScreen() {
     const router = useRouter();
@@ -20,22 +24,28 @@ export default function ExpenseTypeUpdateScreen() {
             name: "", 
             balance: 0, 
         } as ExpenseTypeData);
+    const [limitInput, setLimitInput] = useState<string>("");
     const [errors, setErrors] = useState<ExpenseTypeFormErrors>({});
     
     async function handleSubmit() {
-        var isValid = validate();
+        const nextExpenseType = {
+            ...expenseTypeData,
+            limit: parseDotDecimalInputOrZero(limitInput),
+        };
+
+        var isValid = validate(nextExpenseType);
         if (!isValid) 
         {
             return;
         }
 
-        await updateExpenseAsync(expenseTypeData);
+        await updateExpenseAsync(nextExpenseType);
 
         router.back();
     }
 
-    function validate() : boolean {
-        const validationResult = validateExpenseType(expenseTypeData);
+    function validate(expenseType: ExpenseTypeData) : boolean {
+        const validationResult = validateExpenseType(expenseType);
         if (validationResult.isValid) {
             return true;
         }
@@ -60,6 +70,7 @@ export default function ExpenseTypeUpdateScreen() {
         (async () => {
             const expense = await getExpenseAsync(expenseId);
             setExpenseTypeData(expense);
+            setLimitInput(formatDotDecimalInput(expense.limit, true));
         })();
     }, [expenseId]);
 
@@ -77,8 +88,12 @@ export default function ExpenseTypeUpdateScreen() {
                     <TextInputField 
                         label="Limit per month" 
                         placeholder="0"
-                        value={expenseTypeData.limit?.toString() || ''}
-                        onChangeText={(text) => setExpenseTypeData({ ...expenseTypeData, limit: parseFloat(text) || 0 })}
+                        value={limitInput}
+                        onChangeText={(text) => {
+                            setLimitInput(text);
+                            setErrors((prev) => ({ ...prev, limitErrorMessage: undefined }));
+                        }}
+                        dotDecimalOnly
                         errorMessage={errors.limitErrorMessage}/>
                 </View>
                 <View style={styles.submitButton}>
