@@ -17,6 +17,7 @@ export default function RootLayout() {
             <Stack.Screen name="ExpenseTransactionsScreen" options={{ headerShown: false }} />
             <Stack.Screen name="ContextMenuScreen" options={{ headerShown: false }} />
             <Stack.Screen name="ExpenseAnalyticsScreen" options={{ headerShown: false }} />
+            <Stack.Screen name="ExchangeRatesScreen" options={{ headerShown: false }} />
             <Stack.Screen name="SavingGoalsScreen" options={{ headerShown: false }} />
             <Stack.Screen name="SavingGoalAddScreen" options={{ headerShown: false }} />
             <Stack.Screen name="SavingGoalUpdateScreen" options={{ headerShown: false }} />

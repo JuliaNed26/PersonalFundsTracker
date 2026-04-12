@@ -1,34 +1,92 @@
 import { db } from '../index';
-import { eq, or, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { exchangeRates } from '../schema';
 import ExchangeRateEntity from '../../models/entities/ExchangeRateEntity';
-import ExchangeRateRetrievalEntity from '../../models/entities/ExchangeRateRetrievalEntity';
+import ExchangeRateUpdateData from '../../models/data/ExchangeRateUpdateData';
 
-export default async function getExchangeRateAsync(baseCurrency: number, quoteQurrency: number): Promise<number | null> {
-    var exchangeRate = await db.query.exchangeRates.findFirst({
-        where: and(eq(exchangeRates.base, baseCurrency), eq(exchangeRates.quote, quoteQurrency)),
-    });
+type ExchangeRateRow = {
+    base: number;
+    quote: number;
+    purchaseRate: number;
+    sellRate: number;
+};
 
-    return exchangeRate ? exchangeRate.rate : null;
-}
-
-export async function getExchangeRatesListAsync(currencyPairs: Array<ExchangeRateRetrievalEntity>): Promise<ExchangeRateEntity[]> {
-
-    if (currencyPairs.length === 0) return [];
-
-    const conditions = currencyPairs.map(pair =>
-        and(eq(exchangeRates.base, pair.baseCurrency), eq(exchangeRates.quote, pair.quoteCurrency))
-    );
-
-    const results = await db.query.exchangeRates.findMany({
-        where: or(...conditions),
-    });
-
-    return results.map(rate => ({
+function mapExchangeRateRowToEntity(rate: ExchangeRateRow): ExchangeRateEntity {
+    return {
         baseCurrency: rate.base,
         quoteCurrency: rate.quote,
-        rate: rate.rate
-    })) as ExchangeRateEntity[];
+        purchaseRate: rate.purchaseRate,
+        sellRate: rate.sellRate,
+    } as ExchangeRateEntity;
+}
+
+function sortExchangeRates(left: ExchangeRateEntity, right: ExchangeRateEntity): number {
+    if (left.baseCurrency !== right.baseCurrency) {
+        return left.baseCurrency - right.baseCurrency;
+    }
+
+    return left.quoteCurrency - right.quoteCurrency;
+}
+
+export async function getAllExchangeRatesAsync(): Promise<ExchangeRateEntity[]> {
+    const results = await db.query.exchangeRates.findMany();
+
+    return results
+        .map((rate) => mapExchangeRateRowToEntity(rate as ExchangeRateRow))
+        .sort(sortExchangeRates);
+}
+
+export async function getExchangeRateRowAsync(
+    baseCurrency: number,
+    quoteCurrency: number
+): Promise<ExchangeRateEntity | null> {
+    const exchangeRate = await db.query.exchangeRates.findFirst({
+        where: and(eq(exchangeRates.base, baseCurrency), eq(exchangeRates.quote, quoteCurrency)),
+    });
+
+    return exchangeRate ? mapExchangeRateRowToEntity(exchangeRate as ExchangeRateRow) : null;
+}
+
+export async function getExchangeRatesByReferenceCurrencyAsync(
+    referenceCurrency: number
+): Promise<ExchangeRateEntity[]> {
+    const results = await db.query.exchangeRates.findMany({
+        where: and(
+            eq(exchangeRates.quote, referenceCurrency),
+            ne(exchangeRates.base, referenceCurrency)
+        ),
+    });
+
+    return results
+        .map((rate) => mapExchangeRateRowToEntity(rate as ExchangeRateRow))
+        .sort(sortExchangeRates);
+}
+
+export async function updateExchangeRateAsync(
+    data: ExchangeRateUpdateData,
+    referenceCurrency: number
+): Promise<ExchangeRateEntity> {
+    const updated = await db.update(exchangeRates)
+        .set({
+            purchaseRate: data.purchaseRate,
+            sellRate: data.sellRate,
+        })
+        .where(
+            and(
+                eq(exchangeRates.base, data.targetCurrency),
+                eq(exchangeRates.quote, referenceCurrency)
+            )
+        )
+        .returning();
+
+    const row = Array.isArray(updated) ? updated[0] : updated;
+    if (!row) {
+        throw new Error(
+            `Exchange rate not found for target currency ${data.targetCurrency} and reference currency ${referenceCurrency}`
+        );
+    }
+
+    return mapExchangeRateRowToEntity(row as ExchangeRateRow);
 }
 
 export async function insertOrIgnoreExchangeRatesAsync(rates: ExchangeRateEntity[]): Promise<void> {
@@ -38,7 +96,8 @@ export async function insertOrIgnoreExchangeRatesAsync(rates: ExchangeRateEntity
         .values(rates.map(rate => ({
             base: rate.baseCurrency,
             quote: rate.quoteCurrency,
-            rate: rate.rate
+            purchaseRate: rate.purchaseRate,
+            sellRate: rate.sellRate,
         })))
         .onConflictDoNothing();
 }

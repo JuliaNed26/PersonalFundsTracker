@@ -13,6 +13,8 @@ import m0008 from './0008_add_sum_added_to_income_transactions.sql';
 import m0009 from './0009_add_note_to_expense_transactions.sql';
 import m0010 from './0010_add_saving_goals.sql';
 import m0011 from './0011_link_savings_to_accounts.sql';
+import m0012 from './0012_add_purchase_and_sell_exchange_rates.sql';
+import m0013 from './0013_remove_legacy_exchange_rate_rate.sql';
 
   export default {
     journal,
@@ -28,7 +30,9 @@ m0007,
 m0008,
 m0009,
 m0010,
-m0011
+m0011,
+m0012,
+m0013
     }
   }
   

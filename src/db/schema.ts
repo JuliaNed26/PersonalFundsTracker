@@ -66,7 +66,8 @@ export const exchangeRates = sqliteTable(
   {
     base: integer('base').notNull(),
     quote: integer('quote').notNull(),
-    rate: real('rate').notNull()
+    purchaseRate: real('purchaseRate').notNull().default(0),
+    sellRate: real('sellRate').notNull().default(0)
   },
   (table) => ({
     pk: primaryKey({ columns: [table.base, table.quote] })

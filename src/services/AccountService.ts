@@ -13,14 +13,13 @@ import { AccountEntity } from "../models/entities/AccountEntity";
 import { AccountData } from "../models/data/AccountData";
 import { AccountListData } from "../models/data/AccountListData";
 import { getDefaultCurrencySetting } from "./async-storage/AsyncStorageService";
-import ExchangeRateRetrievalEntity from "../models/entities/ExchangeRateRetrievalEntity";
-import { getExchangeRatesListAsync } from "../db/Repositories/ExchangeRatesRepository";
 import { mapAccountDataToAccountEntity, mapAccountEntityToAccountData, mapAccountUpdateDataToAccountUpdateEntity } from "./MapService";
 import AccountUpdateData from "../models/data/AccountUpdateData";
 import { db } from "../db";
 import { deleteAccountSavingsByAccountId, getAccountSavingsByAccountId } from "../db/Repositories/AccountSavingsRepository";
 import { deleteSavingTransactionsByAccountSavingId } from "../db/Repositories/SavingTransactionsRepository";
 import { getSavingGoalById, updateSavingGoalTotalSaved } from "../db/Repositories/SavingGoalsRepository";
+import { convertSumToCurrencyAsync } from "./ExchangeRateService";
 
 export class AccountBalanceBelowSavedAmountError extends Error {
     minimumAllowedBalance: number;
@@ -118,37 +117,17 @@ export async function deleteAccountAsync(id: number) : Promise<void> {
 }
 
 async function calculateTotalBalanceAsync(accounts: AccountData[]): Promise<number> {
-    var defaultCurrency = await getDefaultCurrencySetting();
-
-    var accountsToInclude = accounts.filter((account: AccountData) => account.includeToTotalBalance);
-    var currenciesToConvertTo = accountsToInclude
-        .map((account: AccountData) => account.currency)
-        .filter((currency, index, self) => self.indexOf(currency) === index && currency !== defaultCurrency)
-        .map(currency => ({ baseCurrency: currency, quoteCurrency: defaultCurrency }) as ExchangeRateRetrievalEntity);
-
-    var exchangeRates = await getExchangeRatesListAsync(currenciesToConvertTo);
-    var ratesDictionary = exchangeRates.reduce((dict, rate) => {
-        dict[rate.baseCurrency] = rate.rate;
-        return dict;
-    }, {} as Record<number, number>);
-
-    for (const pair of currenciesToConvertTo) {
-        if (ratesDictionary[pair.baseCurrency] === undefined) {
-            throw new Error(`Exchange rate not found for currency ${pair.baseCurrency} to ${pair.quoteCurrency}`);
-        }
-    }
-
-    var totalBalance = accounts
-        .filter((account: AccountData) => account.includeToTotalBalance)
-        .reduce((balance, account) =>
-        {
+    const defaultCurrency = await getDefaultCurrencySetting();
+    const accountsToInclude = accounts.filter((account: AccountData) => account.includeToTotalBalance);
+    const convertedBalances = await Promise.all(
+        accountsToInclude.map(async (account) => {
             if (account.currency === defaultCurrency) {
-                return balance + account.balance;
-            } else {
-                var rate = ratesDictionary[account.currency];
-                return balance + (account.balance * rate);
+                return account.balance;
             }
-        }, 0);
 
-    return totalBalance;
+            return await convertSumToCurrencyAsync(account.balance, account.currency, defaultCurrency);
+        })
+    );
+
+    return convertedBalances.reduce((totalBalance, balance) => totalBalance + balance, 0);
 }

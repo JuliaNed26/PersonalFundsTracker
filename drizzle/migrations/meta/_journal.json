@@ -85,6 +85,20 @@
       "when": 1772400000000,
       "tag": "0011_link_savings_to_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1773000000000,
+      "tag": "0012_add_purchase_and_sell_exchange_rates",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1773600000000,
+      "tag": "0013_remove_legacy_exchange_rate_rate",
+      "breakpoints": true
     }
   ]
 }

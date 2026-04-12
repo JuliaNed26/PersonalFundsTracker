@@ -18,6 +18,10 @@ export default function ContextMenuScreen() {
         router.push("/SavingGoalsScreen");
     }
 
+    function handleOpenExchangeRates() {
+        router.push("/ExchangeRatesScreen");
+    }
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
@@ -42,6 +46,11 @@ export default function ContextMenuScreen() {
                         label="Saving goals"
                         onPress={handleOpenSavingGoals}
                         icon={<MaterialCommunityIcons name="stairs-up" size={22} color="#111827" />}
+                    />
+                    <ContextMenuButton
+                        label="Exchange rates"
+                        onPress={handleOpenExchangeRates}
+                        icon={<Ionicons name="swap-horizontal-outline" size={22} color="#111827" />}
                     />
                 </View>
             </View>

@@ -1,6 +1,8 @@
 import { AccountData } from "../models/data/AccountData";
 import AccountSavingData from "../models/data/AccountSavingData";
 import AccountUpdateData from "../models/data/AccountUpdateData";
+import ExchangeRateListItemData from "../models/data/ExchangeRateListItemData";
+import ExchangeRateUpdateData from "../models/data/ExchangeRateUpdateData";
 import ExpenseTypeData from "../models/data/ExpenseTypeData";
 import { IncomeSourceData } from "../models/data/IncomeSourceData";
 import IncomeTransactionData from "../models/data/IncomeTransactionData";
@@ -12,6 +14,7 @@ import { ExpenseTypeEntity } from "../models/entities/ExpenseTypeEntity";
 import { IncomeSourceEntity } from "../models/entities/IncomeEntity";
 import IncomeTransactionEntity from "../models/entities/IncomeTransactionEntity";
 import AccountSavingEntity from "../models/entities/AccountSavingEntity";
+import ExchangeRateEntity from "../models/entities/ExchangeRateEntity";
 import SavingGoalEntity from "../models/entities/SavingGoalEntity";
 import SavingGoalUpdateEntity from "../models/entities/SavingGoalUpdateEntity";
 import { normalizeSavingGoalName } from "./SavingGoalsNormalizationService";
@@ -162,6 +165,26 @@ export function mapSavingGoalUpdateDataToSavingGoalUpdateEntity(
         monthGoal: savingGoal.monthGoal,
         totalGoal: savingGoal.totalGoal,
     } as SavingGoalUpdateEntity;
+}
+
+export function mapExchangeRateEntityToListItemData(
+    exchangeRate: ExchangeRateEntity
+): ExchangeRateListItemData {
+    return {
+        targetCurrency: exchangeRate.baseCurrency,
+        purchaseRate: exchangeRate.purchaseRate,
+        sellRate: exchangeRate.sellRate,
+    } as ExchangeRateListItemData;
+}
+
+export function mapExchangeRateListItemToUpdateData(
+    exchangeRate: ExchangeRateListItemData
+): ExchangeRateUpdateData {
+    return {
+        targetCurrency: exchangeRate.targetCurrency,
+        purchaseRate: exchangeRate.purchaseRate,
+        sellRate: exchangeRate.sellRate,
+    } as ExchangeRateUpdateData;
 }
 
 export function mapIncomeTransactionEntityToIncomeTransactionData(transaction: IncomeTransactionEntity) : IncomeTransactionData
