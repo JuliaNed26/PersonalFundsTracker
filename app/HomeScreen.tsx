@@ -17,10 +17,15 @@ import ExpenseTypeData from '../src/models/data/ExpenseTypeData';
 import { getAllExpensesForCurrentMonthAsync } from '../src/services/ExpenseTypesService';
 import { AccountData } from '../src/models/data/AccountData';
 import TransactionsModal from './components/TransactionsModal';
+import Modal from './components/Modal';
 import { addIncomeTransactionAsync } from '../src/services/IncomeTransactionService';
 import { addTransferTransactionAsync } from '../src/services/AccountTransferService';
 import { addExpenseTransactionAsync } from '../src/services/ExpenseTransactionService';
 import { getTodayLocalDate } from '../src/services/DateService';
+import {
+  getMonthlySpendingNotificationAsync,
+  markMonthlySpendingNotificationShownAsync,
+} from '../src/services/MonthlySpendingNotificationService';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -41,6 +46,7 @@ export default function HomeScreen() {
   const [accountToExpenseModalVisible, setAccountToExpenseModalVisible] = useState<boolean>(false);
   const [sourceAccountForTransfer, setSourceAccountForTransfer] = useState<AccountData | null>(null);
   const [targetAccountForTransfer, setTargetAccountForTransfer] = useState<AccountData | null>(null);
+  const [spendingNotificationVisible, setSpendingNotificationVisible] = useState<boolean>(false);
 
   // ToDo: implement total planned calculation
   const totalExpenses = expenseTypes.reduce((sum, item) => sum + item.balance, 0);
@@ -233,9 +239,15 @@ export default function HomeScreen() {
       setDefaultCurrency(currentDefaultCurrency);
       const currencySymbol = currencyMap.get(currentDefaultCurrency) || '';
       setDefaultCurrencySymbol(currencySymbol);
-    } 
-    catch (err) 
-    { 
+
+      const notification = await getMonthlySpendingNotificationAsync();
+      if (notification) {
+        await markMonthlySpendingNotificationShownAsync();
+        setSpendingNotificationVisible(true);
+      }
+    }
+    catch (err)
+    {
       console.error('Failed to refresh incomes', err);
     }
   }
@@ -312,6 +324,16 @@ export default function HomeScreen() {
           setSelectedIncome(null);
           setSelectedExpenseType(null);
         }}/>
+      <Modal
+        visible={spendingNotificationVisible}
+        setIsVisible={setSpendingNotificationVisible}
+        text="You've already spent more this month than all of last month."
+        firstButtonText="Open analytics"
+        firstButtonAction={() => {
+          setSpendingNotificationVisible(false);
+          router.push('/ExpenseAnalyticsScreen');
+        }}
+      />
     </View>
   );
 }

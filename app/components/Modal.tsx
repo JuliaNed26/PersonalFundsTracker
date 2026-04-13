@@ -15,9 +15,9 @@ type Props = ModalProps & {
     setIsVisible: (visible: boolean) => void;
     text?: string;
     firstButtonText: string;
-    secondButtonText: string;
+    secondButtonText?: string;
     firstButtonAction: () => void;
-    secondButtonAction: () => void;
+    secondButtonAction?: () => void;
     thirdButtonText?: string;
     thirdButtonAction?: () => void;
     fourthButtonText?: string;
@@ -69,13 +69,15 @@ export default function Modal({
             buttonStyle: firstButtonStyle,
             textStyle: firstButtonTextStyle,
         },
-        {
-            text: secondButtonText,
-            action: secondButtonAction,
-            icon: secondButtonIcon,
-            buttonStyle: secondButtonStyle,
-            textStyle: secondButtonTextStyle,
-        },
+        secondButtonText && secondButtonAction
+            ? {
+                text: secondButtonText,
+                action: secondButtonAction,
+                icon: secondButtonIcon,
+                buttonStyle: secondButtonStyle,
+                textStyle: secondButtonTextStyle,
+            }
+            : null,
         thirdButtonText && thirdButtonAction
             ? {
                 text: thirdButtonText,

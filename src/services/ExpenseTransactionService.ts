@@ -9,7 +9,7 @@ import {
     getExpenseTransactionsByExpenseIdAsync,
     updateExpenseTransactionNoteAsync as updateExpenseTransactionNoteInDbAsync,
 } from "../db/Repositories/ExpenseTransactionsRepository";
-import type { ExpenseTransactionTrendRow } from "../db/Repositories/ExpenseTransactionsRepository";
+import type { ExpenseTransactionEntity } from "../db/Repositories/ExpenseTransactionsRepository";
 import { AccountData } from "../models/data/AccountData";
 import ExpenseTransactionData from "../models/data/ExpenseTransactionData";
 import ExpenseTransactionListItem from "../models/data/ExpenseTransactionListItem";
@@ -80,6 +80,6 @@ export async function getExpenseBalancesAsync(): Promise<Record<number, number>>
     return await getExpenseBalancesByExpenseIdAsync();
 }
 
-export async function getAllExpenseTransactionsForAnalyticsAsync(): Promise<ExpenseTransactionTrendRow[]> {
+export async function getAllExpenseTransactionsForAnalyticsAsync(): Promise<ExpenseTransactionEntity[]> {
     return await getAllExpenseTransactionsForAnalyticsFromDbAsync();
 }

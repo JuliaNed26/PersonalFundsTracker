@@ -4,13 +4,9 @@ import { accounts, expenseTransactions, expenses } from "../schema";
 import ExpenseTransactionData from "../../models/data/ExpenseTransactionData";
 import ExpenseTransactionListItem from "../../models/data/ExpenseTransactionListItem";
 import { getCurrentMonthDateRange } from "../../services/DateService";
+import { ExpenseTransactionEntity } from "../../models/entities/ExpenseTransactionEntity";
+import { ExpenseTypeTotalSpendingEntity } from "../../models/entities/ExpenseTypeTotalSpendingEntity";
 
-export interface ExpenseTransactionTrendRow {
-    expenseId: number;
-    expenseName: string;
-    sumReceived: number;
-    date: string;
-}
 
 function getExecutor(executor: DbClient = db): DbClient {
     return executor;
@@ -174,7 +170,7 @@ export async function getExpenseBalancesByExpenseIdAsync(): Promise<Record<numbe
     }, {} as Record<number, number>);
 }
 
-export async function getAllExpenseTransactionsForAnalyticsAsync(): Promise<ExpenseTransactionTrendRow[]> {
+export async function getAllExpenseTransactionsForAnalyticsAsync(): Promise<ExpenseTransactionEntity[]> {
     const rows = db
         .select({
             expenseId: expenseTransactions.expenseId,
@@ -193,4 +189,58 @@ export async function getAllExpenseTransactionsForAnalyticsAsync(): Promise<Expe
         sumReceived: row.sumReceived,
         date: row.date,
     }));
+}
+
+export async function getExpenseTotalForDateRangeAsync(
+    startDate: string,
+    endDate: string
+): Promise<number> {
+    const rows = db
+        .select({ sumReceived: expenseTransactions.sumReceived })
+        .from(expenseTransactions)
+        .where(
+            and(
+                gte(expenseTransactions.date, startDate),
+                lte(expenseTransactions.date, endDate)
+            )
+        )
+        .all();
+
+    return rows.reduce((total, row) => total + row.sumReceived, 0);
+}
+
+export async function getExpenseTotalsByTypeForDateRangeAsync(
+    startDate: string,
+    endDate: string
+): Promise<ExpenseTypeTotalSpendingEntity[]> {
+    const rows = db
+        .select({
+            expenseId: expenseTransactions.expenseId,
+            expenseName: expenses.name,
+            sumReceived: expenseTransactions.sumReceived,
+        })
+        .from(expenseTransactions)
+        .innerJoin(expenses, eq(expenseTransactions.expenseId, expenses.id))
+        .where(
+            and(
+                gte(expenseTransactions.date, startDate),
+                lte(expenseTransactions.date, endDate)
+            )
+        )
+        .all();
+
+    const map = new Map<number, ExpenseTypeTotalSpendingEntity>();
+    for (const row of rows) {
+        const existing = map.get(row.expenseId);
+        if (existing) {
+            existing.sumReceived += row.sumReceived;
+        } else {
+            map.set(row.expenseId, {
+                expenseId: row.expenseId,
+                expenseName: row.expenseName,
+                sumReceived: row.sumReceived,
+            });
+        }
+    }
+    return Array.from(map.values());
 }
