@@ -3,7 +3,7 @@ import {
     getAllExpensesAsync, 
     getExpenseByIdAsync,
     insertExpenseAsync,
-    updateExpenseAsync as updateExpenseInDbAsync } from "../db/Repositories/ExpensesRepository";
+    updateExpenseAsync as updateExpenseInDbAsync } from "../db/repositories/ExpensesRepository";
 import ExpenseTypeData from "../models/data/ExpenseTypeData";
 import { mapExpenseTypeDataToExpenseTypeEntity, mapExpenseTypeEntityToExpenseTypeData } from "./MapService";
 import { getAllExpenseTransactionsForAnalyticsAsync, getExpenseBalancesAsync } from "./ExpenseTransactionService";

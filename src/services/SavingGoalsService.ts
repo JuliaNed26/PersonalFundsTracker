@@ -9,14 +9,14 @@ import {
     getSavingGoalsByCurrencyAsync as getSavingGoalsByCurrencyFromDbAsync,
     insertSavingGoalAsync,
     updateSavingGoalAsync as updateSavingGoalInDbAsync,
-} from "../db/Repositories/SavingGoalsRepository";
+} from "../db/repositories/SavingGoalsRepository";
 import { db } from "../db";
 import { currencyMap } from "../models/constants/CurrencyList";
 import SavingGoalData from "../models/data/SavingGoalData";
 import SavingGoalUpdateData from "../models/data/SavingGoalUpdateData";
-import { getAccountById, updateAccountAvailableBalance } from "../db/Repositories/AccountRepositiory";
-import { deleteAccountSaving, getAccountSavingsByGoalId } from "../db/Repositories/AccountSavingsRepository";
-import { deleteSavingTransactionsByAccountSavingId, getCurrentMonthSavingTotalsByGoalIds } from "../db/Repositories/SavingTransactionsRepository";
+import { getAccountById, updateAccountAvailableBalance } from "../db/repositories/AccountRepositiory";
+import { deleteAccountSaving, getAccountSavingsByGoalId } from "../db/repositories/AccountSavingsRepository";
+import { deleteSavingTransactionsByAccountSavingId, getCurrentMonthSavingTotalsByGoalIds } from "../db/repositories/SavingTransactionsRepository";
 import {
     mapSavingGoalDataToSavingGoalEntity,
     mapSavingGoalEntityToSavingGoalData,

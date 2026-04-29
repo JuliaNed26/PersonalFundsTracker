@@ -2,7 +2,7 @@ import { getMonthDateRange, getPreviousMonthDateRange } from "./DateService";
 import {
     getExpenseTotalForDateRangeAsync,
     getExpenseTotalsByTypeForDateRangeAsync,
-} from "../db/Repositories/ExpenseTransactionsRepository";
+} from "../db/repositories/ExpenseTransactionsRepository";
 import { MonthlyExpenseTypeComparisonDataData } from "../models/data/MonthlyExpenseTypeComparisonDataData";
 import { MonthlyExpenseComparisonData } from "../models/data/MonthlyExpenseComparisonData";
 

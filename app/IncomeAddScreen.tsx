@@ -84,19 +84,21 @@ const styles = StyleSheet.create({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        height: "60%",
+        flex: 1,
         marginTop: 20,
     },
     inputsContainer: {
         width: "100%",
-        height: "80%",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "flex-start",
+        paddingTop: 24,
     },
     submitButton: {
-        width: "80%",
-        marginTop: 100,
+        position: "absolute",
+        bottom: 30,
+        left: "10%",
+        right: "10%",
     }
 });

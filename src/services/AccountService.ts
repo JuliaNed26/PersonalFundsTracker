@@ -8,7 +8,7 @@ import {
     insertAccountAsync, 
     updateAccountAsync as updateAccountInDbAsync,
     updateAccount,
-} from "../db/Repositories/AccountRepositiory";
+} from "../db/repositories/AccountRepositiory";
 import { AccountEntity } from "../models/entities/AccountEntity";
 import { AccountData } from "../models/data/AccountData";
 import { AccountListData } from "../models/data/AccountListData";
@@ -16,9 +16,9 @@ import { getDefaultCurrencySetting } from "./async-storage/AsyncStorageService";
 import { mapAccountDataToAccountEntity, mapAccountEntityToAccountData, mapAccountUpdateDataToAccountUpdateEntity } from "./MapService";
 import AccountUpdateData from "../models/data/AccountUpdateData";
 import { db } from "../db";
-import { deleteAccountSavingsByAccountId, getAccountSavingsByAccountId } from "../db/Repositories/AccountSavingsRepository";
-import { deleteSavingTransactionsByAccountSavingId } from "../db/Repositories/SavingTransactionsRepository";
-import { getSavingGoalById, updateSavingGoalTotalSaved } from "../db/Repositories/SavingGoalsRepository";
+import { deleteAccountSavingsByAccountId, getAccountSavingsByAccountId } from "../db/repositories/AccountSavingsRepository";
+import { deleteSavingTransactionsByAccountSavingId } from "../db/repositories/SavingTransactionsRepository";
+import { getSavingGoalById, updateSavingGoalTotalSaved } from "../db/repositories/SavingGoalsRepository";
 import { convertSumToCurrencyAsync } from "./ExchangeRateService";
 
 export class AccountBalanceBelowSavedAmountError extends Error {

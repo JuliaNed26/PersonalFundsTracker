@@ -1,5 +1,5 @@
 import { getMonthDateRange, getPreviousMonthDateRange, getMonthKey } from "./DateService";
-import { getExpenseTotalForDateRangeAsync } from "../db/Repositories/ExpenseTransactionsRepository";
+import { getExpenseTotalForDateRangeAsync } from "../db/repositories/ExpenseTransactionsRepository";
 import {
     getMonthlySpendingNotificationShownMonth,
     saveMonthlySpendingNotificationShownMonth,
@@ -14,9 +14,9 @@ export async function getMonthlySpendingNotificationAsync(): Promise<MonthlySpen
     const currentMonthKey = getMonthKey();
     const shownMonthKey = await getMonthlySpendingNotificationShownMonth();
 
-    if (shownMonthKey === currentMonthKey) {
-        return null;
-    }
+    //if (shownMonthKey === currentMonthKey) {
+    //    return null;
+    //}
 
     const { startOfMonth: currentStart, endOfMonth: currentEnd } = getMonthDateRange();
     const { startOfMonth: prevStart, endOfMonth: prevEnd } = getPreviousMonthDateRange();

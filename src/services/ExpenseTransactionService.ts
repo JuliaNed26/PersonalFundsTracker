@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { getAccountById, updateAccountBalances } from "../db/Repositories/AccountRepositiory";
+import { getAccountById, updateAccountBalances } from "../db/repositories/AccountRepositiory";
 import {
     addExpenseTransaction,
     deleteExpenseTransaction,
@@ -8,8 +8,8 @@ import {
     getExpenseTransactionsByAccountIdAsync,
     getExpenseTransactionsByExpenseIdAsync,
     updateExpenseTransactionNoteAsync as updateExpenseTransactionNoteInDbAsync,
-} from "../db/Repositories/ExpenseTransactionsRepository";
-import type { ExpenseTransactionEntity } from "../db/Repositories/ExpenseTransactionsRepository";
+} from "../db/repositories/ExpenseTransactionsRepository";
+import type { ExpenseTransactionEntity } from "../db/repositories/ExpenseTransactionsRepository";
 import { AccountData } from "../models/data/AccountData";
 import ExpenseTransactionData from "../models/data/ExpenseTransactionData";
 import ExpenseTransactionListItem from "../models/data/ExpenseTransactionListItem";

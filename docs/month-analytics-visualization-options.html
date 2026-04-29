@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Current Month Analytics Visualization Options</title>
+    <style>
+        :root {
+            --bg-cream: #f6f0e5;
+            --bg-mist: #dfe8d0;
+            --card: rgba(255, 251, 245, 0.92);
+            --card-strong: #fff8ee;
+            --ink: #1f2328;
+            --muted: #68717c;
+            --shadow: 0 18px 45px rgba(41, 50, 33, 0.12);
+            --current: #d8612a;
+            --current-soft: #f5b18f;
+            --previous: #66717d;
+            --previous-soft: #b7c2cb;
+            --positive: #237f46;
+            --negative: #b44f2f;
+            --accent: #c9db63;
+            --accent-deep: #2e4735;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(201, 219, 99, 0.35), transparent 28%),
+                radial-gradient(circle at top right, rgba(216, 97, 42, 0.2), transparent 24%),
+                linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-mist) 100%);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(31, 35, 40, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(31, 35, 40, 0.04) 1px, transparent 1px);
+            background-size: 32px 32px;
+            mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 85%);
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        .page {
+            width: min(1200px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 28px 0 60px;
+        }
+
+        .hero,
+        .section {
+            border: 1px solid rgba(31, 35, 40, 0.08);
+            box-shadow: var(--shadow);
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(255, 248, 238, 0.96), rgba(235, 243, 219, 0.88));
+            border-radius: 28px;
+            padding: 28px;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            right: -80px;
+            top: -80px;
+            width: 220px;
+            height: 220px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(216, 97, 42, 0.18), transparent 68%);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(201, 219, 99, 0.32);
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent-deep);
+            font-weight: 700;
+        }
+
+        .hero h1 {
+            margin-top: 18px;
+            font-size: clamp(2rem, 5vw, 3.8rem);
+            line-height: 0.98;
+            max-width: 760px;
+        }
+
+        .hero p,
+        .section-header p,
+        .visual-card p,
+        .muted {
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-top: 22px;
+        }
+
+        .hero-note {
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.58);
+            border: 1px solid rgba(31, 35, 40, 0.08);
+            padding: 18px;
+            align-self: end;
+        }
+
+        .hero-note strong {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .hero-note ul {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .jump-nav {
+            position: sticky;
+            top: 14px;
+            z-index: 2;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 18px 0 22px;
+            padding: 12px;
+            border-radius: 18px;
+            backdrop-filter: blur(16px);
+            background: rgba(255, 248, 239, 0.8);
+            border: 1px solid rgba(31, 35, 40, 0.08);
+            box-shadow: 0 10px 25px rgba(41, 50, 33, 0.08);
+        }
+
+        .jump-nav a {
+            text-decoration: none;
+            color: inherit;
+            padding: 10px 14px;
+            border-radius: 999px;
+            font-size: 0.92rem;
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(31, 35, 40, 0.08);
+        }
+
+        .section {
+            margin-top: 22px;
+            padding: 24px;
+            border-radius: 28px;
+            background: var(--card);
+        }
+
+        .section-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: end;
+            margin-bottom: 18px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 9px 12px;
+            font-size: 0.83rem;
+            font-weight: 700;
+            background: rgba(47, 71, 53, 0.08);
+            color: var(--accent-deep);
+        }
+
+        .pill.mvp {
+            background: rgba(201, 219, 99, 0.38);
+        }
+
+        .pill.story {
+            background: rgba(77, 132, 170, 0.16);
+        }
+
+        .pill.detail {
+            background: rgba(211, 125, 135, 0.16);
+        }
+
+        .summary-cards,
+        .currency-cards {
+            display: grid;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .summary-cards {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .currency-cards {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .summary-card,
+        .currency-card,
+        .visual-card,
+        .note-box,
+        .ranked-row,
+        .legend-row,
+        .goal-row {
+            border: 1px solid rgba(31, 35, 40, 0.06);
+        }
+
+        .summary-card,
+        .currency-card {
+            position: relative;
+            overflow: hidden;
+            padding: 18px;
+            border-radius: 22px;
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.94), rgba(255, 245, 232, 0.8));
+        }
+
+        .summary-card::after {
+            content: "";
+            position: absolute;
+            right: -36px;
+            top: -36px;
+            width: 96px;
+            height: 96px;
+            border-radius: 999px;
+            background: rgba(201, 219, 99, 0.18);
+        }
+
+        .summary-label,
+        .currency-code {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+        }
+
+        .summary-value,
+        .currency-value {
+            margin-top: 8px;
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            font-weight: 700;
+        }
+
+        .summary-foot,
+        .goal-meta,
+        .category-meta {
+            margin-top: 8px;
+            font-size: 0.92rem;
+            color: var(--muted);
+        }
+
+        .delta-positive {
+            color: var(--negative);
+        }
+
+        .delta-negative {
+            color: var(--positive);
+        }
+
+        .two-column,
+        .donut-layout {
+            display: grid;
+            grid-template-columns: 1.3fr 0.7fr;
+            gap: 18px;
+        }
+
+        .visual-card {
+            padding: 18px;
+            border-radius: 22px;
+            background: var(--card-strong);
+        }
+
+        .visual-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+        }
+
+        .notes-list,
+        .ranked-list,
+        .bar-chart,
+        .legend-list,
+        .goal-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .note-box,
+        .ranked-row,
+        .legend-row,
+        .goal-row {
+            border-radius: 18px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .ranked-row {
+            display: grid;
+            grid-template-columns: 180px 1fr 140px;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .category-name {
+            font-weight: 700;
+        }
+
+        .micro-bars,
+        .bar-stack,
+        .progress-shell {
+            display: grid;
+            gap: 8px;
+        }
+
+        .micro-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.84rem;
+            color: var(--muted);
+        }
+
+        .micro-bar,
+        .bar-track,
+        .progress-track {
+            height: 14px;
+            border-radius: 999px;
+            background: rgba(31, 35, 40, 0.08);
+            overflow: hidden;
+        }
+
+        .micro-bar {
+            position: relative;
+            height: 12px;
+        }
+
+        .micro-fill,
+        .bar-fill,
+        .progress-fill {
+            height: 100%;
+            border-radius: 999px;
+        }
+
+        .micro-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+        }
+
+        .micro-fill.previous,
+        .bar-fill.previous {
+            background: linear-gradient(90deg, var(--previous-soft), var(--previous));
+        }
+
+        .micro-fill.current,
+        .bar-fill.current {
+            background: linear-gradient(90deg, var(--current-soft), var(--current));
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #7bc28b, #237f46);
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #e19f77, var(--negative));
+        }
+
+        .delta-box {
+            text-align: right;
+        }
+
+        .bar-row {
+            display: grid;
+            grid-template-columns: 160px 1fr 150px;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .bar-values {
+            display: grid;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .svg-shell {
+            overflow-x: auto;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(31, 35, 40, 0.06);
+            padding: 10px;
+        }
+
+        .svg-shell svg {
+            display: block;
+            width: 100%;
+            min-width: 960px;
+            height: auto;
+        }
+
+        .donut-layout {
+            grid-template-columns: 340px 1fr;
+            align-items: start;
+        }
+
+        .donut-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            min-height: 360px;
+        }
+
+        .donut {
+            width: 240px;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: inset 0 0 0 1px rgba(31, 35, 40, 0.05);
+        }
+
+        .donut::after {
+            content: "";
+            position: absolute;
+            inset: 34px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, rgba(255, 249, 240, 0.98), rgba(244, 236, 224, 0.94));
+            border: 1px solid rgba(31, 35, 40, 0.06);
+            box-shadow: inset 0 10px 24px rgba(31, 35, 40, 0.05);
+        }
+
+        .donut-center {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            z-index: 1;
+            padding: 0 50px;
+        }
+
+        .donut-center strong {
+            display: block;
+            font-size: 1.8rem;
+            line-height: 1.05;
+        }
+
+        .legend-row {
+            display: grid;
+            grid-template-columns: 18px 1.1fr 0.7fr 0.6fr;
+        }
+
+        .swatch {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+        }
+
+        .goal-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 140px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footnote {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(47, 71, 53, 0.08);
+            color: var(--accent-deep);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 980px) {
+            .hero-grid,
+            .two-column,
+            .donut-layout,
+            .goal-row,
+            .ranked-row,
+            .bar-row,
+            .legend-row {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-cards,
+            .currency-cards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .delta-box {
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page {
+                width: min(100%, calc(100% - 20px));
+                padding-top: 14px;
+            }
+
+            .hero,
+            .section {
+                border-radius: 22px;
+                padding: 18px;
+            }
+
+            .summary-cards,
+            .currency-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .donut {
+                width: 210px;
+            }
+
+            .jump-nav {
+                top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="hero">
+            <div class="eyebrow">Offline mockup • April 2026 vs March 2026</div>
+            <div class="hero-grid">
+                <div>
+                    <h1>Visualization options for the new current month analytics page.</h1>
+                    <p>
+                        This standalone page uses sample data close to your feature spec: current month expenses are compared
+                        against the whole previous month, and savings are shown as current-month net saved grouped by currency.
+                        Each section below shows one visualization style so you can decide what feels clearest for your app.
+                    </p>
+                </div>
+                <aside class="hero-note">
+                    <strong>Sample assumptions</strong>
+                    <ul>
+                        <li>Expenses are shown in one comparison currency: `UAH`.</li>
+                        <li>Savings are grouped by their own goal currency.</li>
+                        <li>`Net saved` means deposits minus withdrawals this month.</li>
+                    </ul>
+                </aside>
+            </div>
+        </header>
+
+        <nav class="jump-nav">
+            <a href="#option-1">1. Summary + ranked list</a>
+            <a href="#option-2">2. Grouped bars</a>
+            <a href="#option-3">3. Dumbbell chart</a>
+            <a href="#option-4">4. Waterfall chart</a>
+            <a href="#option-5">5. Donut + delta list</a>
+            <a href="#option-6">6. Savings cards + progress</a>
+        </nav>
+
+        <section class="section" id="option-1">
+            <div class="section-header">
+                <div>
+                    <div class="pill mvp">Best MVP choice</div>
+                    <h2>1. Summary cards + ranked comparison list</h2>
+                    <p>
+                        This option is the fastest to scan. It tells the user whether spending is up, by how much,
+                        and which categories are responsible without forcing them to decode a chart first.
+                    </p>
+                </div>
+            </div>
+            <div class="summary-cards" id="summary-cards"></div>
+            <div class="two-column">
+                <div class="visual-card">
+                    <h3>Category comparison</h3>
+                    <p>Sorted by biggest month-over-month movement so the most important changes are immediately visible.</p>
+                    <div class="ranked-list" id="ranked-list"></div>
+                </div>
+                <div class="notes-list">
+                    <div class="note-box">
+                        <strong>Why it works</strong>
+                        <div class="muted">Very readable on mobile, cheap to build, and friendly for future notifications that deep-link into the page.</div>
+                    </div>
+                    <div class="note-box">
+                        <strong>Weakness</strong>
+                        <div class="muted">Less visually dramatic than a chart-heavy screen, especially if you want a more “analytics dashboard” feel.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="option-2">
+            <div class="section-header">
+                <div>
+                    <div class="pill story">Strong for comparison</div>
+                    <h2>2. Grouped horizontal bar chart</h2>
+                    <p>
+                        This view makes current versus previous month obvious with almost no explanation.
+                        It works especially well when the user wants to spot category spikes quickly.
+                    </p>
+                </div>
+            </div>
+            <div class="visual-card">
+                <h3>Expenses by type</h3>
+                <p>Each category shows the previous month bar first, then the current month bar on the same scale.</p>
+                <div class="bar-chart" id="grouped-bar-chart"></div>
+            </div>
+        </section>
+
+        <section class="section" id="option-3">
+            <div class="section-header">
+                <div>
+                    <div class="pill detail">Elegant comparison</div>
+                    <h2>3. Dumbbell chart</h2>
+                    <p>
+                        The dumbbell chart is compact and expressive. It is excellent when the whole story is “how far did each category move?”
+                        and you want less visual bulk than full bars.
+                    </p>
+                </div>
+            </div>
+            <div class="visual-card">
+                <h3>Distance between previous and current month</h3>
+                <p>Grey dot is the previous month. Orange dot is the current month. The line between them makes change direction easy to read.</p>
+                <div class="svg-shell">
+                    <svg id="dumbbell-chart" viewBox="0 0 1100 600" role="img" aria-label="Dumbbell chart comparing current and previous month expenses by category"></svg>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="option-4">
+            <div class="section-header">
+                <div>
+                    <div class="pill story">Best for explanation</div>
+                    <h2>4. Waterfall chart</h2>
+                    <p>
+                        This style answers a different question: not just what changed, but which categories built the jump
+                        from the previous month total to the current month total.
+                    </p>
+                </div>
+            </div>
+            <div class="visual-card">
+                <h3>What caused the increase</h3>
+                <p>Positive deltas push the running total upward. Negative deltas pull it back down.</p>
+                <div class="svg-shell">
+                    <svg id="waterfall-chart" viewBox="0 0 1280 480" role="img" aria-label="Waterfall chart explaining change from previous month total to current month total"></svg>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="option-5">
+            <div class="section-header">
+                <div>
+                    <div class="pill detail">Best for composition</div>
+                    <h2>5. Donut chart + delta list</h2>
+                    <p>
+                        This option helps when you care about where the current month money is going, not only how much changed.
+                        It is strongest as a secondary view rather than the main month-over-month comparison view.
+                    </p>
+                </div>
+            </div>
+            <div class="donut-layout">
+                <div class="visual-card donut-card">
+                    <h3>Current month spending mix</h3>
+                    <div class="donut" id="donut-chart">
+                        <div class="donut-center">
+                            <div>
+                                <span class="muted">Current month</span>
+                                <strong id="donut-total"></strong>
+                                <span class="muted">across all expense types</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="visual-card">
+                    <h3>Composition with month-over-month delta</h3>
+                    <p>Useful if you want to see both share of spend and which categories changed most.</p>
+                    <div class="legend-list" id="donut-legend"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="option-6">
+            <div class="section-header">
+                <div>
+                    <div class="pill mvp">Best for savings</div>
+                    <h2>6. Savings currency cards + per-goal progress rows</h2>
+                    <p>
+                        This is the clearest savings format for your app because savings can exist in different currencies.
+                        It avoids misleading totals while still showing momentum on each goal.
+                    </p>
+                </div>
+            </div>
+            <div class="currency-cards" id="currency-cards"></div>
+            <div class="visual-card">
+                <h3>Saving goals this month</h3>
+                <p>Each row keeps the goal’s own currency visible and uses progress bars for the monthly target.</p>
+                <div class="goal-list" id="goal-list"></div>
+                <div class="footnote">
+                    Negative rows are useful because they immediately show when a user withdrew from savings during the month.
+                </div>
+            </div>
+        </section>
+    </div>
+    <script>
+        const expenseData = [
+            { name: "Housing", current: 4200, previous: 4200, color: "#2f4735" },
+            { name: "Groceries", current: 3900, previous: 3450, color: "#d8612a" },
+            { name: "Shopping", current: 2700, previous: 1550, color: "#cf8c55" },
+            { name: "Dining out", current: 1800, previous: 1150, color: "#d37d87" },
+            { name: "Utilities", current: 1650, previous: 1750, color: "#66717d" },
+            { name: "Travel", current: 1300, previous: 350, color: "#4d84aa" },
+            { name: "Transport", current: 950, previous: 1200, color: "#6c4f86" },
+            { name: "Gifts", current: 900, previous: 0, color: "#e6b96d" },
+            { name: "Health", current: 600, previous: 980, color: "#5a9b77" },
+            { name: "Subscriptions", current: 420, previous: 400, color: "#937c6a" }
+        ];
+
+        const savingGoals = [
+            { name: "Emergency Fund", currency: "UAH", saved: 4500, monthGoal: 6000 },
+            { name: "Home Buffer", currency: "UAH", saved: 1800, monthGoal: 2500 },
+            { name: "Laptop", currency: "USD", saved: 220, monthGoal: 250 },
+            { name: "Investments", currency: "USD", saved: -40, monthGoal: 150 },
+            { name: "Vacation", currency: "EUR", saved: 140, monthGoal: 200 }
+        ];
+
+        const expenseCurrency = "UAH";
+        const nf = new Intl.NumberFormat("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        const currentTotal = expenseData.reduce((sum, item) => sum + item.current, 0);
+        const previousTotal = expenseData.reduce((sum, item) => sum + item.previous, 0);
+        const totalDelta = currentTotal - previousTotal;
+        const totalDeltaPct = previousTotal === 0 ? null : (totalDelta / previousTotal) * 100;
+        const maxExpenseValue = Math.max(...expenseData.flatMap((item) => [item.current, item.previous]));
+        const biggestIncrease = [...expenseData].sort((left, right) => (right.current - right.previous) - (left.current - left.previous))[0];
+        const savingsByCurrency = savingGoals.reduce((totals, goal) => {
+            totals[goal.currency] = (totals[goal.currency] ?? 0) + goal.saved;
+            return totals;
+        }, {});
+
+        function formatAmount(value, currency) {
+            return `${value < 0 ? "-" : ""}${nf.format(Math.abs(value))} ${currency}`;
+        }
+
+        function formatSignedAmount(value, currency) {
+            const sign = value > 0 ? "+" : value < 0 ? "-" : "";
+            return `${sign}${nf.format(Math.abs(value))} ${currency}`;
+        }
+
+        function formatSignedPercent(value) {
+            if (value === null || Number.isNaN(value)) {
+                return "n/a";
+            }
+
+            const sign = value > 0 ? "+" : value < 0 ? "-" : "";
+            return `${sign}${Math.abs(value).toFixed(1)}%`;
+        }
+
+        function createSummaryCards() {
+            const cards = [
+                {
+                    label: "Spent this month",
+                    value: formatAmount(currentTotal, expenseCurrency),
+                    foot: "April 2026 to date"
+                },
+                {
+                    label: "Previous month",
+                    value: formatAmount(previousTotal, expenseCurrency),
+                    foot: "Full March 2026"
+                },
+                {
+                    label: "Difference",
+                    value: formatSignedAmount(totalDelta, expenseCurrency),
+                    foot: formatSignedPercent(totalDeltaPct),
+                    className: totalDelta >= 0 ? "delta-positive" : "delta-negative"
+                },
+                {
+                    label: "Biggest increase",
+                    value: biggestIncrease.name,
+                    foot: formatSignedAmount(biggestIncrease.current - biggestIncrease.previous, expenseCurrency)
+                }
+            ];
+
+            document.getElementById("summary-cards").innerHTML = cards.map((card) => `
+                <article class="summary-card">
+                    <div class="summary-label">${card.label}</div>
+                    <div class="summary-value ${card.className ?? ""}">${card.value}</div>
+                    <div class="summary-foot">${card.foot}</div>
+                </article>
+            `).join("");
+        }
+
+        function createRankedList() {
+            const ranked = [...expenseData].sort((left, right) => Math.abs((right.current - right.previous)) - Math.abs((left.current - left.previous)));
+            document.getElementById("ranked-list").innerHTML = ranked.map((item) => {
+                const delta = item.current - item.previous;
+                const deltaClass = delta >= 0 ? "delta-positive" : "delta-negative";
+                return `
+                    <div class="ranked-row">
+                        <div>
+                            <div class="category-name">${item.name}</div>
+                            <div class="category-meta">Change ${formatSignedAmount(delta, expenseCurrency)}</div>
+                        </div>
+                        <div class="micro-bars">
+                            <div class="micro-labels">
+                                <span>Previous ${formatAmount(item.previous, expenseCurrency)}</span>
+                                <span>Current ${formatAmount(item.current, expenseCurrency)}</span>
+                            </div>
+                            <div class="micro-bar">
+                                <div class="micro-fill previous" style="width: ${(item.previous / maxExpenseValue) * 100}%"></div>
+                            </div>
+                            <div class="micro-bar">
+                                <div class="micro-fill current" style="width: ${(item.current / maxExpenseValue) * 100}%"></div>
+                            </div>
+                        </div>
+                        <div class="delta-box">
+                            <strong class="${deltaClass}">${formatSignedAmount(delta, expenseCurrency)}</strong>
+                            <span class="muted">${item.previous === 0 ? "new this month" : formatSignedPercent((delta / item.previous) * 100)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        function createGroupedBars() {
+            const sorted = [...expenseData].sort((left, right) => right.current - left.current);
+            document.getElementById("grouped-bar-chart").innerHTML = sorted.map((item) => `
+                <div class="bar-row">
+                    <div>
+                        <div class="category-name">${item.name}</div>
+                        <div class="category-meta">Delta ${formatSignedAmount(item.current - item.previous, expenseCurrency)}</div>
+                    </div>
+                    <div class="bar-stack">
+                        <div class="bar-track">
+                            <div class="bar-fill previous" style="width: ${(item.previous / maxExpenseValue) * 100}%"></div>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill current" style="width: ${(item.current / maxExpenseValue) * 100}%"></div>
+                        </div>
+                    </div>
+                    <div class="bar-values">
+                        <div><strong>Prev:</strong> ${formatAmount(item.previous, expenseCurrency)}</div>
+                        <div><strong>Now:</strong> ${formatAmount(item.current, expenseCurrency)}</div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function createDumbbellChart() {
+            const svg = document.getElementById("dumbbell-chart");
+            const width = 1100;
+            const leftPad = 180;
+            const rightPad = 220;
+            const topPad = 54;
+            const rowHeight = 46;
+            const innerWidth = width - leftPad - rightPad;
+            const chartHeight = rowHeight * expenseData.length;
+            const height = topPad + chartHeight + 40;
+            const scaleX = (value) => leftPad + (value / maxExpenseValue) * innerWidth;
+            const sorted = [...expenseData].sort((left, right) => right.current - left.current);
+            const ticks = [0, 0.25, 0.5, 0.75, 1].map((fraction) => Math.round(maxExpenseValue * fraction));
+
+            const grid = ticks.map((tick) => {
+                const x = scaleX(tick);
+                return `
+                    <line x1="${x}" y1="${topPad - 20}" x2="${x}" y2="${height - 20}" stroke="rgba(31,35,40,0.12)" stroke-dasharray="4 8" />
+                    <text x="${x}" y="22" font-size="12" fill="#68717c" text-anchor="middle">${formatAmount(tick, expenseCurrency)}</text>
+                `;
+            }).join("");
+
+            const rows = sorted.map((item, index) => {
+                const y = topPad + index * rowHeight;
+                const prevX = scaleX(item.previous);
+                const currX = scaleX(item.current);
+                const delta = item.current - item.previous;
+                const deltaColor = delta >= 0 ? "#d8612a" : "#237f46";
+                return `
+                    <text x="10" y="${y + 5}" font-size="15" font-weight="700" fill="#1f2328">${item.name}</text>
+                    <line x1="${Math.min(prevX, currX)}" y1="${y}" x2="${Math.max(prevX, currX)}" y2="${y}" stroke="rgba(31,35,40,0.22)" stroke-width="4" stroke-linecap="round" />
+                    <circle cx="${prevX}" cy="${y}" r="8" fill="#66717d" />
+                    <circle cx="${currX}" cy="${y}" r="8" fill="${deltaColor}" />
+                    <text x="${width - 10}" y="${y + 5}" font-size="13" fill="${deltaColor}" text-anchor="end">${formatSignedAmount(delta, expenseCurrency)}</text>
+                `;
+            }).join("");
+
+            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            svg.innerHTML = `<rect x="0" y="0" width="${width}" height="${height}" fill="transparent" />${grid}${rows}`;
+        }
+
+        function createWaterfallChart() {
+            const svg = document.getElementById("waterfall-chart");
+            const sorted = [...expenseData]
+                .map((item) => ({ ...item, delta: item.current - item.previous }))
+                .sort((left, right) => Math.abs(right.delta) - Math.abs(left.delta));
+
+            const steps = [{ label: "Prev total", type: "total", value: previousTotal }];
+            let running = previousTotal;
+
+            sorted.forEach((item) => {
+                const start = running;
+                const end = running + item.delta;
+                steps.push({ label: item.name, type: "delta", delta: item.delta, start, end });
+                running = end;
+            });
+
+            steps.push({ label: "Current total", type: "total", value: currentTotal });
+
+            const width = Math.max(1280, steps.length * 110);
+            const height = 480;
+            const topPad = 28;
+            const bottomPad = 90;
+            const leftPad = 60;
+            const chartHeight = height - topPad - bottomPad;
+            const maxValue = Math.max(
+                currentTotal,
+                previousTotal,
+                ...steps.filter((step) => step.type === "delta").flatMap((step) => [step.start, step.end])
+            ) * 1.08;
+            const stepWidth = 64;
+            const gap = 34;
+            const yFor = (value) => topPad + (1 - value / maxValue) * chartHeight;
+
+            const guides = [0, 0.25, 0.5, 0.75, 1].map((fraction) => {
+                const value = Math.round(maxValue * fraction);
+                const y = yFor(value);
+                return `
+                    <line x1="${leftPad - 10}" y1="${y}" x2="${width - 20}" y2="${y}" stroke="rgba(31,35,40,0.1)" />
+                    <text x="${leftPad - 16}" y="${y + 4}" font-size="12" fill="#68717c" text-anchor="end">${nf.format(value)}</text>
+                `;
+            }).join("");
+
+            let currentX = leftPad;
+            const bars = steps.map((step, index) => {
+                const x = currentX;
+                currentX += stepWidth + gap;
+
+                if (step.type === "total") {
+                    const y = yFor(step.value);
+                    const h = height - bottomPad - y;
+                    return `
+                        <rect x="${x}" y="${y}" width="${stepWidth}" height="${h}" rx="14" fill="${index === 0 ? "#66717d" : "#d8612a"}" opacity="0.92" />
+                        <text x="${x + stepWidth / 2}" y="${y - 10}" font-size="12" font-weight="700" fill="#1f2328" text-anchor="middle">${formatAmount(step.value, expenseCurrency)}</text>
+                        <text x="${x + stepWidth / 2}" y="${height - 34}" font-size="12" fill="#68717c" text-anchor="middle">${step.label}</text>
+                    `;
+                }
+
+                const isPositive = step.delta >= 0;
+                const startY = yFor(step.start);
+                const endY = yFor(step.end);
+                const y = Math.min(startY, endY);
+                const h = Math.abs(endY - startY);
+                const fill = isPositive ? "#d8612a" : "#237f46";
+
+                return `
+                    <line x1="${x - gap + 8}" y1="${startY}" x2="${x}" y2="${startY}" stroke="rgba(31,35,40,0.25)" stroke-dasharray="4 5" />
+                    <rect x="${x}" y="${y}" width="${stepWidth}" height="${Math.max(h, 3)}" rx="12" fill="${fill}" opacity="0.88" />
+                    <text x="${x + stepWidth / 2}" y="${y - 10}" font-size="12" font-weight="700" fill="${fill}" text-anchor="middle">${formatSignedAmount(step.delta, expenseCurrency)}</text>
+                    <text x="${x + stepWidth / 2}" y="${height - 34}" font-size="12" fill="#68717c" text-anchor="middle">${step.label}</text>
+                `;
+            }).join("");
+
+            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            svg.innerHTML = `<rect x="0" y="0" width="${width}" height="${height}" fill="transparent" />${guides}${bars}`;
+        }
+
+        function createDonut() {
+            let cursor = 0;
+            const gradientStops = expenseData.map((item) => {
+                const share = item.current / currentTotal;
+                const start = cursor * 360;
+                cursor += share;
+                const end = cursor * 360;
+                return `${item.color} ${start}deg ${end}deg`;
+            }).join(", ");
+
+            document.getElementById("donut-chart").style.background = `conic-gradient(${gradientStops})`;
+            document.getElementById("donut-total").textContent = formatAmount(currentTotal, expenseCurrency);
+
+            const legendData = [...expenseData].sort((left, right) => right.current - left.current);
+            document.getElementById("donut-legend").innerHTML = legendData.map((item) => {
+                const delta = item.current - item.previous;
+                const share = (item.current / currentTotal) * 100;
+                const deltaClass = delta >= 0 ? "delta-positive" : "delta-negative";
+                return `
+                    <div class="legend-row">
+                        <div class="swatch" style="background:${item.color}"></div>
+                        <div>
+                            <div class="category-name">${item.name}</div>
+                            <div class="category-meta">${share.toFixed(1)}% of current month</div>
+                        </div>
+                        <div>${formatAmount(item.current, expenseCurrency)}</div>
+                        <div class="${deltaClass}">${formatSignedAmount(delta, expenseCurrency)}</div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        function createSavingsSection() {
+            const currencyOrder = ["UAH", "USD", "EUR"];
+            document.getElementById("currency-cards").innerHTML = currencyOrder
+                .filter((currency) => savingsByCurrency[currency] !== undefined)
+                .map((currency) => `
+                    <article class="currency-card">
+                        <div class="currency-code">Net saved this month</div>
+                        <div class="currency-value">${formatAmount(savingsByCurrency[currency], currency)}</div>
+                        <div class="summary-foot">${currency} grouped total</div>
+                    </article>
+                `).join("");
+
+            const sortedGoals = [...savingGoals].sort((left, right) => {
+                if (left.currency !== right.currency) {
+                    return left.currency.localeCompare(right.currency);
+                }
+                return right.saved - left.saved;
+            });
+
+            document.getElementById("goal-list").innerHTML = sortedGoals.map((goal) => {
+                const progress = goal.monthGoal <= 0 ? 0 : Math.min(Math.abs(goal.saved) / goal.monthGoal, 1.15);
+                const isNegative = goal.saved < 0;
+                const stateLabel = isNegative
+                    ? "Net withdrawal this month"
+                    : `${Math.min(progress * 100, 999).toFixed(0)}% of monthly target`;
+
+                return `
+                    <div class="goal-row">
+                        <div>
+                            <div class="category-name">${goal.name}</div>
+                            <div class="goal-meta">Monthly target ${formatAmount(goal.monthGoal, goal.currency)}</div>
+                        </div>
+                        <div class="progress-shell">
+                            <div class="progress-track">
+                                <div class="progress-fill ${isNegative ? "warning" : ""}" style="width:${progress * 100}%"></div>
+                            </div>
+                            <div class="goal-meta">${stateLabel}</div>
+                        </div>
+                        <div class="${isNegative ? "delta-positive" : ""}">
+                            <strong>${formatSignedAmount(goal.saved, goal.currency)}</strong>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        createSummaryCards();
+        createRankedList();
+        createGroupedBars();
+        createDumbbellChart();
+        createWaterfallChart();
+        createDonut();
+        createSavingsSection();
+    </script>
+</body>
+</html>

@@ -4,7 +4,7 @@ import CircleItem from './CircleItem';
 import AddButton from './AddButton';
 import { IncomeSourceData } from '../../../src/models/data/IncomeSourceData';
 import { useState, useEffect } from 'react';
-import { deleteIncomeByIdAsync } from '../../../src/db/Repositories/IncomeRepository';
+import { deleteIncomeByIdAsync } from '../../../src/db/repositories/IncomeRepository';
 import Modal from '../../components/Modal';
 import { useRouter } from 'expo-router';
 

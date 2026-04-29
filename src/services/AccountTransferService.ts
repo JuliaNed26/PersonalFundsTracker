@@ -1,12 +1,12 @@
 import { db } from "../db";
-import { getAccountById, getAccountByIdAsync, getAllAccountsAsync, updateAccountBalances } from "../db/Repositories/AccountRepositiory";
+import { getAccountById, getAccountByIdAsync, getAllAccountsAsync, updateAccountBalances } from "../db/repositories/AccountRepositiory";
 import {
     addAccountTransferTransaction,
     addAccountTransferTransactionAsync,
     deleteAccountTransferTransaction,
     deleteAccountTransferTransactionAsync,
     getAccountTransferTransactionsByAccountIdAsync,
-} from "../db/Repositories/AccountTransactionsRepository";
+} from "../db/repositories/AccountTransactionsRepository";
 import { AccountData } from "../models/data/AccountData";
 import { AccountTransferData } from "../models/data/AccountTransferData";
 import { AccountTransferListItem } from "../models/data/AccountTransferListItem";

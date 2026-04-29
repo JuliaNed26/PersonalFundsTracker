@@ -4,11 +4,11 @@ import {
     getIncomeByIdAsync, 
     getIncomeByIdWithCurrentMonthTransactionsAsync, 
     insertIncomeAsync,
-    updateIncomeAsync as updateAccountInDbAsync } from "../db/Repositories/IncomeRepository";
+    updateIncomeAsync as updateAccountInDbAsync } from "../db/repositories/IncomeRepository";
 import { IncomeSourceData } from "../models/data/IncomeSourceData";
 import IncomeTransactionData from "../models/data/IncomeTransactionData";
 import { mapIncomeEntityToIncomeSourceData, mapIncomeTransactionDataToIncomeTransactionEntity, mapIncomeTransactionEntityToIncomeTransactionData } from "./MapService";
-import { addIncomeTransaction as addIncomeTransactionToDb } from "../db/Repositories/IncomeTransactionsRepository";
+import { addIncomeTransaction as addIncomeTransactionToDb } from "../db/repositories/IncomeTransactionsRepository";
 import { IncomeSourceEntity } from "../models/entities/IncomeEntity";
 
 export async function getIncomesAsync() : Promise<IncomeSourceData[]> {

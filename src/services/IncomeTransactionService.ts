@@ -8,9 +8,9 @@ import {
   getIncomeTransactionsByAccountIdAsync,
   getIncomeTransactionsByIncomeIdAsync,
   updateIncomeTransactionNoteAsync as updateIncomeTransactionNoteInDbAsync
-} from '../db/Repositories/IncomeTransactionsRepository';
+} from '../db/repositories/IncomeTransactionsRepository';
 import { db } from '../db';
-import { getAccountById, updateAccountBalances } from '../db/Repositories/AccountRepositiory';
+import { getAccountById, updateAccountBalances } from '../db/repositories/AccountRepositiory';
 import { mapIncomeTransactionDataToIncomeTransactionEntity } from './MapService';
 import { AccountData } from '../models/data/AccountData';
 import { getAccountAsync } from './AccountService';

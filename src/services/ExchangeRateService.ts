@@ -3,7 +3,7 @@ import {
     getExchangeRatesByReferenceCurrencyAsync,
     insertOrIgnoreExchangeRatesAsync,
     updateExchangeRateAsync as updateExchangeRateInRepositoryAsync,
-} from "../db/Repositories/ExchangeRatesRepository";
+} from "../db/repositories/ExchangeRatesRepository";
 import ExchangeRateListItemData from "../models/data/ExchangeRateListItemData";
 import ExchangeRateUpdateData from "../models/data/ExchangeRateUpdateData";
 import ExchangeRateEntity from "../models/entities/ExchangeRateEntity";

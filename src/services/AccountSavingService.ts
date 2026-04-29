@@ -6,21 +6,21 @@ import {
     insertAccountSaving,
     updateAccountSavingBalance,
     deleteAccountSaving,
-} from "../db/Repositories/AccountSavingsRepository";
+} from "../db/repositories/AccountSavingsRepository";
 import {
     getCurrentMonthSavingTotalsByAccountSavingIds,
     insertSavingTransaction,
     deleteSavingTransactionsByAccountSavingId,
-} from "../db/Repositories/SavingTransactionsRepository";
+} from "../db/repositories/SavingTransactionsRepository";
 import {
     getSavingGoalById,
     getSavingGoalsByCurrency,
     updateSavingGoalTotalSaved,
-} from "../db/Repositories/SavingGoalsRepository";
+} from "../db/repositories/SavingGoalsRepository";
 import {
     getAccountById,
     updateAccountAvailableBalance,
-} from "../db/Repositories/AccountRepositiory";
+} from "../db/repositories/AccountRepositiory";
 import AccountSavingData from "../models/data/AccountSavingData";
 import SavingGoalData from "../models/data/SavingGoalData";
 import {
